@@ -1,0 +1,25 @@
+{
+  "main": "main.js",
+  "scripts": {
+    "start": "vite --host --open",
+    "build": "vite build"
+  },
+  "author": "local901",
+  "license": "ISC",
+  "devDependencies": {
+    "@suid/vite-plugin": "^0.2.0",
+    "@types/node": "^22.2.0",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0",
+    "vite-plugin-solid": "^2.10.2",
+    "vite-plugin-top-level-await": "^1.4.4"
+  },
+  "dependencies": {
+    "@local901/validator": "^0.2.7",
+    "@solidjs/router": "^0.14.1",
+    "solid-js": "^1.8.20"
+  }
+}

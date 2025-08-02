@@ -1,0 +1,21 @@
+{
+  "main": "src/main.js",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "watch": "tsx watch src/main.js",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.24",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@local901/env": "^0.0.3",
+    "@local901/validator": "^0.2.8",
+    "express": "^5.1.0",
+    "modbus-serial": "^8.0.21-no-serial-port",
+    "mysql2": "^3.14.1"
+  }
+}

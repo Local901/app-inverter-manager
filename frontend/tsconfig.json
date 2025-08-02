@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": [
+      "vite/client"
+    ],
+    "typeRoots": [
+      "node_modules",
+      "node_modules/@types",
+      "src/types",
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "isolatedModules": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ],
+    "strict": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "target": "ESNext",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+  },
+  "include": [
+    "src",
+    "lib",
+    "vite.config.js"
+  ]
+}

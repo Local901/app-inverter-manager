@@ -1,0 +1,223 @@
+:root {
+  --background: #ffffff;
+  --background-primary: #cacaca;
+  --background-secondary: #70d7f7;
+  --foreground: #171717;
+}
+
+.color-primary {
+  --color: #cacaca;
+}
+.color-secondary {
+  --color: #70d7f7;
+}
+.color-not-found {
+  --color: #ee73e8;
+}
+.color-warning {
+  --color: #e9d358;
+}
+.color-error {
+  --color: #fc6767;
+}
+.color-disabled {
+  --color: #b8b8b8;
+}
+.color-ok {
+  --color: #d4ff9d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --background-primary: #505050;
+    --background-secondary: #38788b;
+    --foreground: #ededed;
+  }
+
+  .color-primary {
+    --color: #505050;
+  }
+  .color-secondary {
+    --color: #1a6177;
+  }
+  .color-not-found {
+    --color: #860680;
+  }
+  .color-warning {
+    --color: #a58d04;
+  }
+  .color-error {
+    --color: #a80a0a;
+  }
+  .color-disabled {
+    --color: #686868;
+  }
+  .color-ok {
+    --color: #538b0a;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+html,
+body {
+  max-width: 100vw;
+  width: 100vw;
+  max-height: 100vh;
+  height: 100vh;
+  overflow: auto;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Specific styles */
+
+main {
+  background-color: var(--background-primary);
+}
+
+.navbar {
+    background-color: var(--background-secondary);
+}
+
+.stack {
+  width: 100%;
+}
+
+.navbar .nav-button {
+  box-sizing: content-box;
+  padding: 1.5ch;
+  border-left: 1px solid rgba(0,0,0,0.4);
+  border-right: 1px solid rgba(0,0,0,0.4);
+
+  &.current {
+    background-color: rgba(255,255,255, 0.15);
+  }
+}
+
+.dialog::backdrop {
+  background-image: linear-gradient(
+      45deg,
+      magenta,
+      rebeccapurple,
+      dodgerblue,
+      green
+  );
+  opacity: 0.75;
+}
+
+fieldset, .fieldset {
+  background-color: var(--background-primary);
+  border-radius: 1.5em;
+  padding: 1em;
+}
+fieldset > legend, .fieldset > legend {
+  padding: 0.5em;
+  border: 1px solid gray;
+  background-color: var(--background-secondary);
+  border-radius: 1.5em;
+}
+
+.panel {
+  background-color: var(--color, transparent);
+  padding: 1.5ch;
+  border-radius: 2rem;
+}
+.nav-button .panel:hover {
+  box-shadow: 0 0 0.5em 0.05em var(--foreground);
+}
+
+dialog {
+  width: calc(min(calc(750px + 5vw), 100vw) - 5vw)
+}
+.input-group {
+  width: 100%;
+  padding: 0.5em;
+  display: flex;
+}
+.input-group label {
+  width: 10rem
+}
+.input-group *:not(label) {
+  flex-grow: 1;
+}
+
+.submit-button {
+  padding: 0.5em;
+  border-radius: 0.5em;
+  background-color: var(--color, buttonface);
+}
+
+.schedule {
+  padding-top: 1.5em;
+}
+.schedule table {
+  border: none;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+  text-align: left;
+}
+.schedule table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--background-primary);
+}
+.schedule table thead th:first-child, .schedule table tbody th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background-color: var(--background-primary);
+}
+.schedule .header {
+  min-width: 8em;
+  padding: 0.25em;
+  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
+}
+.schedule .header-type, .schedule .value-type {
+  padding: 0.25em;
+  padding-right: 1em;
+  border-right: 1px solid #aaa;
+}
+.schedule tbody td {
+  padding: 0.25em 0;
+  border-left: 1px solid #aaa;
+}
+.schedule tbody .value {
+  background-color: color-mix(in srgb, var(--background-secondary), transparent 50%) ;
+  overflow: hidden;
+}
+.schedule tbody .nowLine {
+  box-sizing: content-box;
+  border: 2px solid red;
+}
+/* .clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+} */

@@ -1,0 +1,1 @@
+export type TypeFormat<GENERAL, TYPE extends GENERAL> = TYPE;

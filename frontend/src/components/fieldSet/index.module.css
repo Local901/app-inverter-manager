@@ -1,0 +1,9 @@
+.fieldset {
+    position: relative;
+    border: 2px groove black;
+}
+.fieldset > legend {
+    position: absolute;
+    top: 0;
+    translate: 0 -50%
+}
