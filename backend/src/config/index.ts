@@ -1,6 +1,8 @@
 import { Env } from "@local901/env";
 
 export const config = {
+    debug: Env.boolean("DEBUG", false),
+
     port: Env.number("PORT", 8080),
     publicFilesPath: Env.string("PUBLIC_PATH", "./public"),
 

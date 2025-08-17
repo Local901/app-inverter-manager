@@ -69,7 +69,7 @@ export class InMemoryStore implements DataStore {
         const start = rangeStart?.getTime() ?? Date.now();
         const end = rangeEnd?.getTime() ?? Date.now();
         return (this.actions[inverterId] ?? [])
-            .filter((action) => action.createAt.getTime() <= end && (!action.deletedAt || start < action.deletedAt.getTime()));
+            .filter((action) => action.createdAt.getTime() <= end && (!action.deletedAt || start < action.deletedAt.getTime()));
     }
 
     /** @inheritdoc */

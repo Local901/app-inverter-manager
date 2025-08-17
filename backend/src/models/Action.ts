@@ -10,7 +10,7 @@ export class Action {
     activeUntil!: Date;
     repeatWeekly!: boolean;
     value!: number;
-    createAt!: Date;
+    createdAt!: Date;
     deletedAt?: Date;
 
     public isActive() {
@@ -43,7 +43,7 @@ export class Action {
 
         if (
             (!this.repeatWeekly && (activeUntil < startTime || endTime < activeFrom)) ||
-            endTime < this.createAt.getTime() ||
+            endTime < this.createdAt.getTime() ||
             (this.deletedAt && this.deletedAt.getTime() < startTime)
         ) {
             return null;
@@ -62,7 +62,7 @@ export class Action {
             }
         }
 
-        activeFrom = Math.max(this.createAt.getTime(), activeFrom);
+        activeFrom = Math.max(this.createdAt.getTime(), activeFrom);
         activeUntil = this.deletedAt ? Math.min(this.deletedAt.getTime(), activeUntil) : activeUntil;
         const timeDiff = endTime - startTime;
 

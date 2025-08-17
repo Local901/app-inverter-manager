@@ -2,6 +2,7 @@ import { Inverter, type PartialInverterResponse } from "../Inverter.js";
 import { ModbusBuilder, type ModbusClient, type ModbusTcpOptions } from "../../clients/ModbusClient.js";
 import type { FormConfig } from "../../types/FormConfig.js";
 import { Status } from "../../types/Status.js";
+import { resolve } from "path";
 
 enum ControlMode {
     ACTIVE = 802,
@@ -20,10 +21,10 @@ export class SMASunnyTripower extends Inverter<SMASunnyTripowerSettings> {
         this.client = await ModbusBuilder.ConnectTcp(this.options);
     }
     
-    protected stopInverter(): Promise<void> {
-        return new Promise((resolve) => {
-            this.client?.close(resolve)
-        });
+    protected async stopInverter(): Promise<void> {
+        await Promise.all([
+            new Promise((resolve) => this.client ? this.client.close(resolve) : resolve(undefined))
+        ]);
     }
 
     public async getStatus(): Promise<Status> {

@@ -9,19 +9,20 @@ export abstract class Inverter<OPTIONS extends GeneralSettings = GeneralSettings
     public readonly options!: OPTIONS;
     public abstract readonly type: InverterType;
 
-    private hasStarted = false;
+    private hasStarted = 0;
     protected abstract startInverter(): Promise<void>;
     protected abstract stopInverter(): Promise<void>;
     public async start(): Promise<void> {
         if (this.hasStarted) {
+            this.hasStarted++;
             return;
         }
-        this.hasStarted = true;
+        this.hasStarted++;
         try {
             await this.startInverter();
         } catch (err) {
             console.error(err);
-            this.hasStarted = false;
+            this.hasStarted--;
         }
     }
     public async stop(): Promise<void> {
@@ -29,7 +30,7 @@ export abstract class Inverter<OPTIONS extends GeneralSettings = GeneralSettings
             return;
         }
         await this.stopInverter();
-        this.hasStarted = false;
+        this.hasStarted--;
     }
 
     public abstract getStatus(): Promise<Status>;

@@ -1,4 +1,5 @@
 import ModbusRTU from "modbus-serial";
+import { config } from "../config/index.js";
 
 export type ModbusTcpOptions = {
     ip: string;
@@ -32,8 +33,10 @@ export class ModbusBuilder {
 
             return client;
         } catch (error) {
-            console.log("Failed to start modbus over TCP");
-            console.error(error);
+            if (config.debug) {
+                console.log("Failed to start modbus over TCP");
+                console.error(error);
+            }
             return undefined;
         }
     }

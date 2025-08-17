@@ -7,6 +7,7 @@ import { Status } from "../types/Status.js";
 
 export class ActionService {
     private timeoutRef: NodeJS.Timeout | undefined;
+    private processing = false;
 
     public constructor(
         public readonly inverterRepository: InverterRepository,
@@ -21,7 +22,8 @@ export class ActionService {
             return;
         }
         let processing = false;
-        this.timeoutRef = setInterval(async () => {
+
+        const action = async () => {
             if (processing) {
                 console.warn("Previous process still in progress. (skip)");
                 return
@@ -34,7 +36,10 @@ export class ActionService {
             } finally {
                 processing = false;
             }
-        }, 5 * 60000); // Every 5 minutes.
+        }
+
+        this.timeoutRef = setInterval(action, 5 * 60000); // Every 5 minutes.
+        setImmediate(action);
     }
 
     public stop(): void {

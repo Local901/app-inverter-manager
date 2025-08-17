@@ -122,7 +122,10 @@ export class SqlStore implements DataStore {
 
     private createActionObject(props: Partial<Action>): Action {
         const action = new Action();
-        Object.assign(action, props);
+        Object.assign(action, {
+            ...props,
+            repeatWeekly: !props ? false : true,
+        });
         return action;
     }
 
@@ -136,7 +139,7 @@ export class SqlStore implements DataStore {
             return null;
         }
         // @ts-expect-error Not correct type
-        return this.createAction(result[0]);
+        return this.createActionObject(result[0]);
     }
 
     /** @inheritdoc */
@@ -148,9 +151,8 @@ export class SqlStore implements DataStore {
               AND createdAt < ?
               AND (deletedAt is NULL OR deletedAt > ?)
         `, [inverterId, rangeEnd ?? new Date(), rangeStart ?? new Date()]);
-        console.log(results);
-        // return results
-        throw new Error("Method not implemented.");
+        // @ts-expect-error Not correct type
+        return results.map((data) => this.createActionObject(data));
     }
 
     /** @inheritdoc */
@@ -162,7 +164,7 @@ export class SqlStore implements DataStore {
         return this.createActionObject({
             id: headers.insertId,
             ...info,
-            createAt: new Date(),
+            createdAt: new Date(),
         });
     }
 
@@ -184,18 +186,23 @@ export class SqlStore implements DataStore {
         if (when.getTime() < Date.now()) {
             return this.deleteAction(id);
         }
-        await this.pool.execute(`
-            UPDATE action
-            SET deletedAt = ?
-            WHERE id = ?
-        `, [when, id])
-        throw new Error("Method not implemented.");
+        try {
+            await this.pool.execute(`
+                UPDATE action
+                SET deletedAt = ?
+                WHERE id = ?
+            `, [when, id]);
+            return true;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
     }
 
     /** @inheritdoc */
     public async splitAction(actionId: number, endDate: Date, startDate: Date): Promise<boolean> {
         // COPY
-        await this.pool.execute(`
+        await this.pool.execute<ResultSetHeader>(`
             INSERT INTO action (inverterId, action, value, activeFrom, activeUntil, repeatWeekly, createdAt, deletedAt)
             SELECT inverterId, action, value, activeFrom, activeUntil, repeatWeekly, ? AS createdAt, deletedAt
             FROM action
