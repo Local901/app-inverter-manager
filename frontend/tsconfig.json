@@ -11,8 +11,8 @@
       "node_modules/@types",
       "src/types",
     ],
-    "module": "ESNext",
-    "moduleResolution": "Node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "isolatedModules": true,
     "lib": [
       "DOM",

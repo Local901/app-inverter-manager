@@ -41,17 +41,7 @@ export class ActionRepository {
         return this.store.endActionAt(actionId, when);
     }
 
-    /**
-     * Split repeated action to skip a number of weeks.
-     *
-     * @param actionId Id of the action.
-     * @param splitDate The date to start the split.
-     * @param numberOfWeeks The number of weeks that should be removed (minimum 1).
-     * @returns True when action was spit successfully.
-     */
-    public async stopActionForWeek(actionId: number, splitDate: Date, numberOfWeeks = 1): Promise<boolean>{
-        const startDate = new Date(splitDate);
-        startDate.setHours(startDate.getHours() + (24 * Math.max(1, numberOfWeeks)));
-        return this.store.splitAction(actionId, splitDate, startDate);
+    public async splitAction(actionId: number, from: Date, to: Date): Promise<Action | null> {
+        return this.store.splitAction(actionId, from, to);
     }
 }

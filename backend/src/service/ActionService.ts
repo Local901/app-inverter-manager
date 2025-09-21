@@ -52,10 +52,12 @@ export class ActionService {
 
         for (const inverter of inverters) {
             try {
+                console.log(`Perform actions on ${inverter.name}`);
                 await inverter.start();
 
                 if ((await inverter.getStatus()) !== Status.OK) {
                     // TODO: Add error message to the inverter to allow the user to know why no action was done.
+                    console.log(`Abort actions on ${inverter.name}. Status was not OK.`);
                     continue;
                 }
                 const actions: Action[] = (await this.actionRepository.getActionsForInverter(inverter.id)).filter((action) => action.isActive());

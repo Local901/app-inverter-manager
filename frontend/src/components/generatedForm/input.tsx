@@ -101,6 +101,7 @@ export const GeneratedInput: Component<{
                     type="datetime-local"
                     id={`input_${key}`}
                     name={key}
+                    // INFO: setting value doesn't work
                     value={config.value}
                     required={config.default === undefined}
                 />

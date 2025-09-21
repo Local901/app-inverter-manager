@@ -10,6 +10,7 @@ export interface DialogProps {
     open?: boolean;
     onClose?: () => void;
     controls?: (controls: DialogControls) => void;
+    closedBy?: "any" | "closerequest" | "none"
 }
 
 export const Dialog: ParentComponent<DialogProps> = (props) => {
@@ -27,6 +28,8 @@ export const Dialog: ParentComponent<DialogProps> = (props) => {
         class={`dialog ${styles.dialog}`}
         open={props.open}
         onClose={(props.onClose)}
+        // @ts-expect-error Not supported by all browsers
+        closedby={props.closedBy ?? "any"}
         style={{
             top: "50%",
             left: "50%",

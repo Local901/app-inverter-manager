@@ -1,5 +1,7 @@
 import { type JSX, type ParentComponent } from "solid-js";
 
+const dateRegex = /\d+-\d+-\d+T/
+
 export const Form: ParentComponent<{
     action: string,
     method: string,
@@ -10,11 +12,17 @@ export const Form: ParentComponent<{
     defaultBehavior?: boolean;
 }> = (props) => {
     const onSubmit: JSX.EventHandler<HTMLFormElement, SubmitEvent> = async (event) => {
-        event.preventDefault();
         event.stopPropagation();
 
         const form = event.target as HTMLFormElement;
+        form.method = "dialog";
         const formData = new FormData(form);
+        formData.forEach((value, key) => {
+            // Update local date strings to ISO strings.
+            if (dateRegex.test(value.toString())) {
+                formData.set(key, new Date(value.toString()).toISOString());
+            }
+        })
 
         try {
             if (props.onSubmit) {
@@ -22,6 +30,10 @@ export const Form: ParentComponent<{
             } else {
                 const response = await fetch(props.action, {
                     method: props.method,
+                    body: props.method.toLowerCase() !== "get"
+                        // @ts-expect-error formData does still work even when the type is not included.
+                        ? new URLSearchParams(formData)
+                        : undefined,
                 });
             }
             props.postSubmit?.();

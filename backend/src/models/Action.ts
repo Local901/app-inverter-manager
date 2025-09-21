@@ -71,8 +71,8 @@ export class Action {
             action: this.action,
             value: this.value,
             repeatsWeekly: this.repeatWeekly,
-            start: timeDiff === 0 ? 0 : Math.max(0, (activeFrom - startTime) / timeDiff),
-            end: timeDiff === 0 ? 0 : (1 - Math.min(1, (activeUntil - startTime) / timeDiff)),
+            start: timeDiff === 0 ? 0 : ((activeFrom - startTime) / timeDiff),
+            end: timeDiff === 0 ? 0 : ((endTime - activeUntil) / timeDiff),
         }
     }
 }

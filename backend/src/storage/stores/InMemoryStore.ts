@@ -111,7 +111,6 @@ export class InMemoryStore implements DataStore {
             for (let i = 0; i < actions.length; i++) {
                 const action = actions[i];
                 if (action.id === actionId) {
-                    actions.splice(i, 1);
                     return action;
                 }
             }
@@ -130,15 +129,17 @@ export class InMemoryStore implements DataStore {
     }
 
     /** @inheritdoc */
-    public async splitAction(actionId: number, endDate: Date, startDate: Date): Promise<boolean> {
+    public async splitAction(actionId: number, fromDate: Date, toDate: Date): Promise<Action | null> {
         const action = await this.getAction(actionId);
         if (!action) {
-            return false;
+            return null;
         }
 
-        if (action.deletedAt && action.deletedAt.getTime() <= startDate.getTime()) {
-            action.deletedAt = endDate;
-            return true;
+        if (action.deletedAt && action.deletedAt.getTime() <= toDate.getTime()) {
+            if (action.deletedAt.getTime() > fromDate.getTime()) {
+                action.deletedAt = fromDate;
+            }
+            return null;
         }
 
         const action2 = new Action();
@@ -150,13 +151,13 @@ export class InMemoryStore implements DataStore {
             activeUntil: action.activeUntil,
             repeatWeekly: action.repeatWeekly,
             value: action.value,
-            createAt: startDate,
+            createAt: toDate,
         } as Partial<Action>);
 
         this.actions[action.inverterId].push(action2);
 
-        action.deletedAt = endDate;
+        action.deletedAt = fromDate;
 
-        return true;
+        return action2;
     }
 }

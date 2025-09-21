@@ -124,7 +124,8 @@ export class SqlStore implements DataStore {
         const action = new Action();
         Object.assign(action, {
             ...props,
-            repeatWeekly: !props ? false : true,
+            // @ts-expect-error repeatWeekly is expected to be boolean but is at this moment a number.
+            repeatWeekly: props.repeatWeekly === 1,
         });
         return action;
     }
@@ -183,9 +184,6 @@ export class SqlStore implements DataStore {
 
     /** @inheritdoc */
     public async endActionAt(id: number, when: Date): Promise<boolean> {
-        if (when.getTime() < Date.now()) {
-            return this.deleteAction(id);
-        }
         try {
             await this.pool.execute(`
                 UPDATE action
@@ -200,15 +198,17 @@ export class SqlStore implements DataStore {
     }
 
     /** @inheritdoc */
-    public async splitAction(actionId: number, endDate: Date, startDate: Date): Promise<boolean> {
+    public async splitAction(actionId: number, fromDate: Date, toDate: Date): Promise<Action | null> {
         // COPY
-        await this.pool.execute<ResultSetHeader>(`
+        const [headers] = await this.pool.execute<ResultSetHeader>(`
             INSERT INTO action (inverterId, action, value, activeFrom, activeUntil, repeatWeekly, createdAt, deletedAt)
             SELECT inverterId, action, value, activeFrom, activeUntil, repeatWeekly, ? AS createdAt, deletedAt
             FROM action
             WHERE id = ? AND (deletedAt IS NULL OR deletedAt > NOW())
-        `, [startDate, actionId]);
+        `, [toDate, actionId]);
         // end original action.
-        return this.endActionAt(actionId, endDate);
+        await this.endActionAt(actionId, fromDate);
+        // Return new action.
+        return this.getAction(headers.insertId);
     }
 }

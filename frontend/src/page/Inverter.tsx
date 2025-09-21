@@ -1,12 +1,11 @@
 import { useParams } from "@solidjs/router";
 import { createSignal, Show, type Component } from "solid-js";
-import { validateFetchMany, validateFetchOne } from "src/actions/validateFetch";
+import { validateFetchOne } from "src/actions/validateFetch";
 import type { DialogControls } from "src/components/dialog";
 import { CreateActionDialog } from "src/components/dialog/CreateActionDialog";
 import { InverterNavBar } from "src/components/navbar";
 import { Stack } from "src/components/stack";
 import { Schedule } from "src/elements/schedule";
-import { ActionInfoValidator, type ActionInfo } from "src/models/ActionInfo";
 import { InverterInfoValidator } from "src/models/InverterInfo";
 import { Direction } from "src/types/Direction";
 

@@ -56,12 +56,31 @@ export class ActionController implements Controller {
         });
     }
 
+    private deleteAction(): RequestHandler {
+        return JsonEndpoint<{ id: string }, {}, { from?: string, to?: string }>((req) => {
+            if (!idValidator.validate(req.params)) {
+                throw new NotFound();
+            }
+
+            const id = Number.parseInt(req.params.id);
+
+            if (req.body.to) {
+                this.actionRepository.splitAction(id, req.body.from ? new Date(req.body.from) : new Date(), new Date(req.body.to))
+            } else {
+                this.actionRepository.endActionAt(id, req.body.from ? new Date(req.body.from) : new Date());
+            }
+        });
+    }
+
     /** @inheritdoc */
     public mount(router: IRouter): void {
         const actionRouter = Router();
         
         actionRouter.get(/\/(?<id>\d+)\/?$/, this.getAction());
+        actionRouter.delete(/\/(?<id>\d+)\/?$/, this.deleteAction());
         actionRouter.post(/\/create\/(?<type>.+)\/?$/, this.createAction());
+        actionRouter.post(/\/delete\/(?<id>.+)\/?$/, this.deleteAction());
+
 
         actionRouter.get("/types", JsonEndpoint(() => Object.keys(actionConfig)));
         

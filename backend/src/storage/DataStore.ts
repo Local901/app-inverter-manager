@@ -42,9 +42,9 @@ export interface DataStore {
      * Split repeated action to skip a number of weeks.
      *
      * @param actionId Id of the action.
-     * @param endDate The time the action should be cut at.
-     * @param startDate The time the copy of the action should start at.
+     * @param fromDate The time the action should be cut at.
+     * @param toDate The time the copy of the action should start at.
      * @returns True when action was spit successfully.
      */
-    splitAction(actionId: number, endDate: Date, startDate: Date): Promise<boolean>;
+    splitAction(actionId: number, fromDate: Date, toDate: Date): Promise<Action | null>;
 }

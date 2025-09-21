@@ -6,8 +6,8 @@
         
         "sourceMap": true,
 
-        "module": "ESNext",
-        "moduleResolution": "node",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
         "target": "ESNext",
         "lib": [
             "ESNext"
