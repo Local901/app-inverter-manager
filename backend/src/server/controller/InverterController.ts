@@ -8,7 +8,9 @@ import type { ActionRepository } from "../../repository/ActionRepository.js";
 import { v } from "@local901/validator";
 import { NotFound } from "../errors/NotFound.js";
 import type { FormConfig } from "../../types/FormConfig.js";
-import { actionConfig } from "../../config/Action.js";
+import { actionConfig, type ActionTypes } from "../../config/Action.js";
+import { scheduleConfig } from "../../config/Schedule.js";
+import type { Inverter } from "../../models/Inverter.js";
 
 const idValidator = v.object({
     id: v.string({ regex: /^[1-9][0-9]*|0$/ }),
@@ -22,7 +24,6 @@ const createActionParams = v.object({
 export class InverterController implements Controller {
     public constructor(
         private readonly inverterRepository: InverterRepository,
-        private readonly actionRepository: ActionRepository,
     ) {
 
     }
@@ -56,20 +57,6 @@ export class InverterController implements Controller {
             await inverter.stop();
             return result;
         });
-    }
-
-    private getActions(): RequestHandler {
-        return JsonEndpoint<{ id: string }, { start?: string, end?: string }>(async (req) => {
-            const id = Number.parseInt(req.params.id);
-            if (Number.isNaN(id)) {
-                throw new NotFound();
-            }
-            const start = req.query.start ? new Date(req.query.start) : undefined;
-            const end = req.query.end ? new Date(req.query.end) : undefined;
-
-            return this.actionRepository.getActionsForInverter(id, start, end)
-                .then((result) => result.map((action) => action.getMessage(start ?? new Date(), end ?? new Date())).filter((a) => !!a));
-        })
     }
 
     private deleteInverter(): RequestHandler {
@@ -171,7 +158,7 @@ export class InverterController implements Controller {
         });
     }
 
-    private getActionCreateOptions(): RequestHandler {
+    private getSubCreateOptions(configSet: Record<ActionTypes, (inc: Inverter) => Promise<FormConfig["data"]>>, path: string): RequestHandler {
         return JsonEndpoint<{ id: string, type: string }>(async (req) => {
             if (!createActionParams.validate(req.params)) {
                 throw new NotFound();
@@ -186,11 +173,11 @@ export class InverterController implements Controller {
             }
 
             await inverter.start();
-            const config = await actionConfig[type](inverter);
+            const config = await configSet[type](inverter);
             await inverter.stop();
 
             return {
-                href: `/api/action/create/${type}`,
+                href: `/api/${path}/create/${type}`,
                 data: config,
             } as FormConfig
         });
@@ -202,12 +189,12 @@ export class InverterController implements Controller {
         invRouter.get("/", this.getAllInverters());
         invRouter.get(/\/(?<id>\d+)\/?$/, this.getInverter());
         invRouter.delete(/\/(?<id>\d+)\/?$/, this.deleteInverter());
-        invRouter.get(/\/(?<id>\d+)\/actions\/?$/, this.getActions());
         invRouter.post(/\/(?<id>\d+)\/delete\/?$/, this.deleteInverter());
         invRouter.get(/\/(?<id>\d+)\/settings\/?$/, this.getInverterSettings());
         invRouter.post(/\/(?<id>\d+)\/settings\/?$/, this.postInverterSettings());
 
-        invRouter.get(/\/(?<id>\d+)\/action\/create\/(?<type>.*)\/?$/, this.getActionCreateOptions());
+        invRouter.get(/\/(?<id>\d+)\/action\/create\/(?<type>.*)\/?$/, this.getSubCreateOptions(actionConfig, "action"));
+        invRouter.get(/\/(?<id>\d+)\/schedule\/create\/(?<type>.*)\/?$/, this.getSubCreateOptions(scheduleConfig, "schedule"));
         
         invRouter.get("/types", JsonEndpoint(() => InverterType));
         invRouter.get("/create/:type", this.getCreateOptions());

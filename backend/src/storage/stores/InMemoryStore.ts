@@ -3,11 +3,15 @@ import { DataStore } from "../DataStore.js";
 import type { InverterData } from "../types/InverterData.js";
 import { Action } from "../../models/Action.js";
 import type { ActionCreationInfo } from "../../types/Action.js";
+import { Schedule } from "../../models/Schedule.js";
+import type { ScheduleCreationInfo } from "../../types/Schedule.js";
 
 export class InMemoryStore implements DataStore {
     private readonly inverters: Record<number, InverterData> = {};
     private actionId = 1;
     private readonly actions: Record<number, Action[]> = {};
+    private scheduleId = 1;
+    private readonly schedules: Record<number, Schedule[]> = {};
 
     /** @inheritdoc */
     public async start(): Promise<void> {
@@ -159,5 +163,30 @@ export class InMemoryStore implements DataStore {
         action.deletedAt = fromDate;
 
         return action2;
+    }
+
+    /** @inheritdoc */
+    public async getSchedule(inverterId: number): Promise<Schedule[]> {
+        return this.schedules[inverterId] ?? [];
+    }
+    
+    /** @inheritdoc */
+    public async createScheduleElement(data: ScheduleCreationInfo): Promise<Schedule> {
+        const schedule = new Schedule();
+        Object.assign(schedule, { ...data, id: this.scheduleId++ });
+        (this.schedules[data.inverterId] ??= []).push(schedule);
+        return schedule;
+    }
+
+    /** @inheritdoc */
+    public async deleteScheduleElement(id: number): Promise<boolean> {
+        for (const scheduleElements of Object.values(this.schedules)) {
+            const index = scheduleElements.findIndex((element) => element.id === id);
+            if (index > -1) {
+                scheduleElements.splice(index, 1);
+                return true;
+            }
+        }
+        return false;
     }
 }

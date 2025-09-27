@@ -5,6 +5,7 @@ import type { Controller } from "./controller/Controller.js";
 import { InverterController } from "./controller/InverterController.js";
 import type { Container } from "../types/Container.js";
 import { ActionController } from "./controller/ActionController.js";
+import { ScheduleController } from "./controller/ScheduleController.js";
 
 export class HttpServer {
     private readonly app: Express;
@@ -20,6 +21,7 @@ export class HttpServer {
         this.controllers = [
             new InverterController(container.inverterRepository, container.actionRepository),
             new ActionController(container.actionRepository),
+            new ScheduleController(container.scheduleRepository),
         ];
 
         this.route(this.app);

@@ -21,7 +21,7 @@ export const TimeChart: Component<TimeChartProps> = (props) => {
     const start = new Date(today.getFullYear(), today.getMonth(), today.getDate() + (props.day ?? 0));
     const end = new Date(start);
     end.setDate(end.getDate() + 1);
-    const [actions] = validateFetchMany(`/api/inverter/${props.inverterId}/actions?start=${start.toISOString()}&end=${end.toISOString()}`, ActionInfoValidator);
+    const [actions] = validateFetchMany(`/api/action/all/${props.inverterId}?start=${start.toISOString()}&end=${end.toISOString()}`, ActionInfoValidator);
     const diff = end.getTime() - start.getTime();
 
     const [values, setValues] = createSignal<Record<string, ActionInfo[]>>({});

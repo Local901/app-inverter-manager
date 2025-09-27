@@ -2,6 +2,8 @@ import type { GeneralSettings } from "../types/Inverter.js";
 import type { InverterData } from "./types/InverterData.js";
 import type { Action } from "../models/Action.js";
 import type { ActionCreationInfo } from "../types/Action.js";
+import type { Schedule } from "../models/Schedule.js";
+import type { ScheduleCreationInfo } from "../types/Schedule.js";
 
 export interface DataStore {
 
@@ -47,4 +49,9 @@ export interface DataStore {
      * @returns True when action was spit successfully.
      */
     splitAction(actionId: number, fromDate: Date, toDate: Date): Promise<Action | null>;
+
+
+    getSchedule(inverterId: number): Promise<Schedule[]>;
+    createScheduleElement(data: ScheduleCreationInfo): Promise<Schedule>;
+    deleteScheduleElement(id: number): Promise<boolean>;
 }

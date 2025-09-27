@@ -9,12 +9,12 @@ import { v } from "@local901/validator";
 import { redirectError } from "../errors/RedirectError.js";
 
 const idValidator = v.object({
-    id: v.string({ regex: /^[1-9][0-9]*|0$/ }),
+    id: v.string({ regex: /^\d+$/ }),
 });
 
 const createActionParams = v.object({
     type: v.string<ActionTypes>({ enum: ActionTypes }),
-})
+});
 
 export class ActionController implements Controller {
     public constructor(private readonly actionRepository: ActionRepository) {}
@@ -32,6 +32,20 @@ export class ActionController implements Controller {
 
             return action.getMessage(action.activeFrom, action.activeUntil);
         });
+    }
+
+    private getActions(): RequestHandler {
+        return JsonEndpoint<{ inverterId: string }, { start?: string, end?: string }>(async (req) => {
+            const id = Number.parseInt(req.params.inverterId);
+            if (Number.isNaN(id)) {
+                throw new NotFound();
+            }
+            const start = req.query.start ? new Date(req.query.start) : undefined;
+            const end = req.query.end ? new Date(req.query.end) : undefined;
+
+            return this.actionRepository.getActionsForInverter(id, start, end)
+                .then((result) => result.map((action) => action.getMessage(start ?? new Date(), end ?? new Date())).filter((a) => !!a));
+        })
     }
     
     private createAction(): RequestHandler {
@@ -57,7 +71,7 @@ export class ActionController implements Controller {
     }
 
     private deleteAction(): RequestHandler {
-        return JsonEndpoint<{ id: string }, {}, { from?: string, to?: string }>((req) => {
+        return JsonEndpoint<{ id: string }, {}, { from?: string, to?: string }>(async (req) => {
             if (!idValidator.validate(req.params)) {
                 throw new NotFound();
             }
@@ -65,9 +79,9 @@ export class ActionController implements Controller {
             const id = Number.parseInt(req.params.id);
 
             if (req.body.to) {
-                this.actionRepository.splitAction(id, req.body.from ? new Date(req.body.from) : new Date(), new Date(req.body.to))
+                await this.actionRepository.splitAction(id, req.body.from ? new Date(req.body.from) : new Date(), new Date(req.body.to))
             } else {
-                this.actionRepository.endActionAt(id, req.body.from ? new Date(req.body.from) : new Date());
+                await this.actionRepository.endActionAt(id, req.body.from ? new Date(req.body.from) : new Date());
             }
         });
     }
@@ -76,11 +90,10 @@ export class ActionController implements Controller {
     public mount(router: IRouter): void {
         const actionRouter = Router();
         
+        actionRouter.get(/\/all\/(?<inverterId>\d+)\/?$/, this.getActions());
         actionRouter.get(/\/(?<id>\d+)\/?$/, this.getAction());
         actionRouter.delete(/\/(?<id>\d+)\/?$/, this.deleteAction());
-        actionRouter.post(/\/create\/(?<type>.+)\/?$/, this.createAction());
-        actionRouter.post(/\/delete\/(?<id>.+)\/?$/, this.deleteAction());
-
+        actionRouter.post("/create/:type", this.createAction());
 
         actionRouter.get("/types", JsonEndpoint(() => Object.keys(actionConfig)));
         

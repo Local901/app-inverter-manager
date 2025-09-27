@@ -5,6 +5,8 @@ import mysql, { type ResultSetHeader, type RowDataPacket } from "mysql2/promise"
 import type { GeneralSettings } from "../../types/Inverter.js";
 import { Action } from "../../models/Action.js";
 import type { ActionCreationInfo } from "../../types/Action.js";
+import { Schedule } from "../../models/Schedule.js";
+import type { ScheduleCreationInfo } from "../../types/Schedule.js";
 
 export class SqlStore implements DataStore {
     private pool;
@@ -46,6 +48,19 @@ export class SqlStore implements DataStore {
                 FOREIGN KEY (inverterId) REFERENCES inverter(id) ON UPDATE CASCADE ON DELETE CASCADE
             )  
         `);
+
+        await this.pool.execute(`
+            CREATE TABLE IF NOT EXISTS schedule (
+                id int NOT NULL AUTO_INCREMENT,
+                inverterId int NOT NULL,
+                action varchar(255) NOT NULL,
+                value int NOT NULL,
+                from int NOT NULL,
+                to int NOT NULL,
+                PRIMARY KEY (id),
+                FOREIGN KEY (inverterId) REFERENCES inverter(id) ON UPDATE CASCADE ON DELETE CASCADE
+            )
+        `)
     }
 
     /** @inheritdoc */
@@ -210,5 +225,40 @@ export class SqlStore implements DataStore {
         await this.endActionAt(actionId, fromDate);
         // Return new action.
         return this.getAction(headers.insertId);
+    }
+
+    /** @inheritdoc */
+    public async getSchedule(inverterId: number): Promise<Schedule[]> {
+        const [results] = await this.pool.execute<RowDataPacket[]>(`
+            SELECT *
+            FROM schedule
+            WHERE inverterId = ?
+        `, [inverterId]);
+        return results.map((data) => Object.assign(new Schedule(), data));
+    }
+    
+    /** @inheritdoc */
+    public async createScheduleElement(data: ScheduleCreationInfo): Promise<Schedule> {
+        const [headers] = await this.pool.execute<ResultSetHeader>(`
+            INSERT INTO schedule (inverterId, action, value, from, to)
+            VALUES (?, ?, ?, ?, ?)
+        `, [data.inverterId, data.action, data.value, data.from, data.to]);
+        return Object.assign(new Schedule(), {
+            ...data,
+            id: headers.insertId,
+        });
+    }
+    
+    /** @inheritdoc */
+    public async deleteScheduleElement(id: number): Promise<boolean> {
+        try {
+            await this.pool.execute(`
+                DELETE FROM schedule WHERE id = ?
+            `, [id]);
+            return true;
+        } catch (error) {
+            console.error(error);
+            return false;
+        }
     }
 }

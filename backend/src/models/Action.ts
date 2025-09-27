@@ -13,8 +13,8 @@ export class Action {
     createdAt!: Date;
     deletedAt?: Date;
 
-    public isActive() {
-        const now = Date.now();
+    public isActive(nowOverride?: Date) {
+        const now = nowOverride?.getTime() ?? Date.now();
         
         if (this.deletedAt && this.deletedAt.getTime() < now) {
             return false;

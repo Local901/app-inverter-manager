@@ -1,6 +1,7 @@
 import { config } from "./config/index.js";
 import { ActionRepository } from "./repository/ActionRepository.js";
 import { InverterRepository } from "./repository/InverterRepository.js";
+import { ScheduleRepository } from "./repository/ScheduleRepository.js";
 import { HttpServer } from "./server/HttpServer.js";
 import { ActionService } from "./service/ActionService.js";
 import stores from "./storage/stores/index.js";
@@ -24,6 +25,7 @@ export class App {
             dataStore: storeInstance,
             inverterRepository: new InverterRepository(storeInstance),
             actionRepository: new ActionRepository(storeInstance),
+            scheduleRepository: new ScheduleRepository(storeInstance),
         };
 
         if (config.features.server) {
@@ -34,13 +36,14 @@ export class App {
         }
         if (config.features.runActions) {
             console.log("Action management enabled ✅");
-            this.actionService = new ActionService(container.inverterRepository, container.actionRepository);
+            this.actionService = new ActionService(container.inverterRepository, container.actionRepository, container.scheduleRepository);
         } else {
             console.log("Action management disabled ❌");
         }
 
         await Promise.all([
             this.httpServer?.start(),
+            this.actionService?.stop(),
         ]);
     }
 }
