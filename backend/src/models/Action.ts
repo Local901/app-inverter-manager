@@ -1,17 +1,40 @@
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 import type { ActionInfo } from "../types/Action.js";
 
 const sevenDaysMilliseconds = (1000 * 60 * 60 * 24 * 7) // seven days in milliseconds.
 
+export enum ActionType{
+    CHARGE = "charge",
+}
+
+@Entity()
 export class Action {
-    id!: number;
-    inverterId!: number;
-    action!: string;
-    activeFrom!: Date;
-    activeUntil!: Date;
-    repeatWeekly!: boolean;
-    value!: number;
-    createdAt!: Date;
-    deletedAt?: Date;
+    @PrimaryGeneratedColumn("increment", { type: "int" })
+    public readonly id!: number;
+
+    @Column("int")
+    public inverterId!: number;
+
+    @Column("enum", { enum: ActionType })
+    public action!: string;
+
+    @Column("timestamp")
+    public activeFrom!: Date;
+
+    @Column("timestamp")
+    public activeUntil!: Date;
+
+    @Column("bool")
+    public repeatWeekly!: boolean;
+
+    @Column("int")
+    public value!: number;
+
+    @CreateDateColumn({ type: "timestamp" })
+    public readonly createdAt!: Date;
+
+    @DeleteDateColumn({ type: "timestamp" })
+    public deletedAt?: Date;
 
     public isActive(nowOverride?: Date) {
         const now = nowOverride?.getTime() ?? Date.now();

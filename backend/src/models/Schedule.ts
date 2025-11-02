@@ -1,10 +1,23 @@
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
+@Entity()
 export class Schedule {
+    @PrimaryGeneratedColumn("increment", { type: "int" })
     public readonly id!: number;
+
+    @Column("int")
     public inverterId!: number;
+
+    @Column("varchar")
     public action!: string;
+
+    @Column("int")
     public value!: number;
+
+    @Column("int")
     public from!: number;
+
+    @Column("int")
     public to!: number;
 
     public isActive(nowOverride?: Date): boolean {

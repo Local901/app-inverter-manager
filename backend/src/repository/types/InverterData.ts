@@ -1,4 +1,4 @@
-import type { GeneralSettings } from "src/types/Inverter";
+import type { GeneralSettings } from "../../types/Inverter.js";
 
 export interface InverterData {
     id: number;

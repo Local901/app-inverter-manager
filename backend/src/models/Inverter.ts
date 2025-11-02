@@ -1,14 +1,54 @@
+import { Column, Entity, PrimaryGeneratedColumn, TableInheritance } from "typeorm";
 import type { GeneralSettings, InverterInfoResponse, InverterShortInfoResponse, InverterType } from "../types/Inverter.js";
 import type { Status } from "../types/Status.js";
 
 export type PartialInverterResponse = Omit<InverterInfoResponse, keyof InverterShortInfoResponse>;
 
-export abstract class Inverter<OPTIONS extends GeneralSettings = GeneralSettings> {
+@Entity()
+@TableInheritance({ column: { type: "varchar", name: "type" } })
+export class Inverter<OPTIONS extends GeneralSettings = GeneralSettings> {
+    @PrimaryGeneratedColumn("increment", { type: "int" })
     public readonly id!: number;
-    public readonly name!: string;
-    public readonly options!: OPTIONS;
-    public abstract readonly type: InverterType;
 
+    @Column("varchar")
+    public readonly name!: string;
+
+    @Column("json")
+    public readonly options!: OPTIONS;
+
+    @Column("varchar")
+    public readonly type!: InverterType;
+
+    public async start(): Promise<void> {
+        throw new Error("Not implemented.");
+    }
+    public async stop(): Promise<void> {
+        throw new Error("Not implemented.");
+    }
+    public async getStatus(): Promise<Status> {
+        throw new Error("Not implemented.");
+    }
+    public async getMaxChargeRate(): Promise<number> {
+        throw new Error("Not implemented.");
+    }
+    public async getMaxDischargeRate(): Promise<number> {
+        throw new Error("Not implemented.");
+    }
+    public async chargeBattery(wattHour: number): Promise<void> {
+        throw new Error("Not implemented.");
+    }
+    public async dischargeBattery(wattHour: number): Promise<void> {
+        throw new Error("Not implemented.");
+    }
+    public async toShortInfo(): Promise<InverterShortInfoResponse> {
+        throw new Error("Not implemented.");
+    }
+    public async toInfo(): Promise<InverterInfoResponse> {
+        throw new Error("Not implemented.");
+    }
+}
+
+export abstract class InverterChild<OPTIONS extends GeneralSettings = GeneralSettings> extends Inverter<OPTIONS> {
     private hasStarted = 0;
     protected abstract startInverter(): Promise<void>;
     protected abstract stopInverter(): Promise<void>;

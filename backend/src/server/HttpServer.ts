@@ -19,7 +19,7 @@ export class HttpServer {
     ) {
         this.app = express();
         this.controllers = [
-            new InverterController(container.inverterRepository, container.actionRepository),
+            new InverterController(container.inverterRepository),
             new ActionController(container.actionRepository),
             new ScheduleController(container.scheduleRepository),
         ];

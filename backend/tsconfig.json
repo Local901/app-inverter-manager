@@ -3,7 +3,7 @@
         "rootDir": "./src",
         "outDir": "./dist",
         
-        "sourceMap": true,
+        "sourceMap": false,
 
         "module": "nodenext",
         "moduleResolution": "nodenext",
@@ -20,6 +20,10 @@
         "forceConsistentCasingInFileNames": true,
         "noImplicitAny": true,
         "noImplicitReturns": true,
+        "noErrorTruncation": true,
+
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
     },
     "include": [
         "src/**/*"

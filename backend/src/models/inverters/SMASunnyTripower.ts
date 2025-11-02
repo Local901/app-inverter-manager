@@ -1,8 +1,8 @@
-import { Inverter, type PartialInverterResponse } from "../Inverter.js";
+import { InverterChild, type PartialInverterResponse } from "../Inverter.js";
 import { ModbusBuilder, type ModbusClient, type ModbusTcpOptions } from "../../clients/ModbusClient.js";
 import type { FormConfig } from "../../types/FormConfig.js";
 import { Status } from "../../types/Status.js";
-import { resolve } from "path";
+import { ChildEntity } from "typeorm";
 
 enum ControlMode {
     ACTIVE = 802,
@@ -12,9 +12,8 @@ enum ControlMode {
 export type SMASunnyTripowerSettings = ModbusTcpOptions & {
 }
 
-export class SMASunnyTripower extends Inverter<SMASunnyTripowerSettings> {
-    public readonly type = "SMASunnyTripower";
-
+@ChildEntity()
+export class SMASunnyTripower extends InverterChild<SMASunnyTripowerSettings> {
     public client?: ModbusClient;
 
     protected async startInverter(): Promise<void> {
