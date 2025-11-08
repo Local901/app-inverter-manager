@@ -22,4 +22,4 @@ export const ActionInfoValidator = v.object<ActionInfo>({
     repeatsWeekly: v.optional(v.boolean(), "undefined"),
     start: v.number({ min: 0, max: 1 }),
     end: v.number({ min: 0, max: 1 }),
-});
+}, { additionalProperties: true });

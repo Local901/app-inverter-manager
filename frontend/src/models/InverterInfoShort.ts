@@ -1,4 +1,4 @@
-import { Status } from "src/types/Status";
+import { Status } from "../types/Status";
 import { v } from "@local901/validator";
 
 export interface InverterInfoShort {
@@ -13,4 +13,4 @@ export const InverterInfoShortValidator = v.object<InverterInfoShort>({
     name: v.string(),
     type: v.string(),
     status: v.enum(Status),
-});
+}, { additionalProperties: true });

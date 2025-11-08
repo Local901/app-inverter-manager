@@ -27,7 +27,6 @@
     "noImplicitReturns": true,
     "target": "ESNext",
     "resolveJsonModule": true,
-    "baseUrl": ".",
   },
   "include": [
     "src",

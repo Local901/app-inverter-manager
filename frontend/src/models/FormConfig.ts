@@ -31,5 +31,5 @@ export const FormConfigValidator = v.object<FormConfig>({
         step: v.optional(v.number(), "undefined"),
         value: v.optional(v.or<number | string>([v.number(), v.string()]), "undefined"),
         hidden: v.optional(v.boolean(), "undefined"),
-    })),
-});
+    }, { additionalProperties: true })),
+}, { additionalProperties: true });
