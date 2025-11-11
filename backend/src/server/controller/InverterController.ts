@@ -4,13 +4,13 @@ import type { InverterRepository } from "../../repository/InverterRepository.js"
 import { JsonEndpoint } from "../endpoints/JsonEndpoint.js";
 import { getInverterInfo } from "../../config/Inverter.js";
 import { InverterType } from "../../types/Inverter.js";
-import type { ActionRepository } from "../../repository/ActionRepository.js";
 import { v } from "@local901/validator";
 import { NotFound } from "../errors/NotFound.js";
 import type { FormConfig } from "../../types/FormConfig.js";
 import { actionConfig, type ActionTypes } from "../../config/Action.js";
 import { scheduleConfig } from "../../config/Schedule.js";
-import type { Inverter } from "../../models/Inverter.js";
+import { Inverter, type InverterChild } from "../../models/Inverter.js";
+import { HttpError } from "../errors/HttpError.js";
 
 const idValidator = v.object({
     id: v.string({ regex: /^[1-9][0-9]*|0$/ }),
@@ -32,10 +32,7 @@ export class InverterController implements Controller {
         return JsonEndpoint(async () => {
             const inverters = await this.inverterRepository.getAllInverters();
             return await Promise.all(inverters.map(async (i) => {
-                await i.start();
-                const result = await i.toShortInfo();
-                await i.stop();
-                return result;
+                return i.connect((inverter) => inverter.toShortInfo());
             }));
         });
     }
@@ -52,10 +49,7 @@ export class InverterController implements Controller {
                 throw new NotFound();
             }
 
-            await inverter.start();
-            const result = await inverter.toInfo();
-            await inverter.stop();
-            return result;
+            return inverter.connect((i) => i.toInfo());
         });
     }
 
@@ -67,8 +61,7 @@ export class InverterController implements Controller {
 
             const id = Number.parseInt(req.params.id);
             if (!await this.inverterRepository.delete(id)) {
-                res.status(500);
-                return "Something went wrong";
+                throw new HttpError("Something went wrong");
             }
             res.redirect("/inverter");
             return;
@@ -158,7 +151,10 @@ export class InverterController implements Controller {
         });
     }
 
-    private getSubCreateOptions(configSet: Record<ActionTypes, (inc: Inverter) => Promise<FormConfig["data"]>>, path: string): RequestHandler {
+    private getSubCreateOptions(
+        configSet: Record<ActionTypes, (inc: InverterChild) => Promise<FormConfig["data"]>>,
+        path: string,
+    ): RequestHandler {
         return JsonEndpoint<{ id: string, type: string }>(async (req) => {
             if (!createActionParams.validate(req.params)) {
                 throw new NotFound();
@@ -172,9 +168,7 @@ export class InverterController implements Controller {
                 throw new NotFound();
             }
 
-            await inverter.start();
-            const config = await configSet[type](inverter);
-            await inverter.stop();
+            const config = await inverter.connect((i) => configSet[type](i));
 
             return {
                 href: `/api/${path}/create/${type}`,

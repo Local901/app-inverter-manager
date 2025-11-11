@@ -1,4 +1,4 @@
-import type { Inverter } from "../models/Inverter.js";
+import type { InverterChild } from "../models/Inverter.js";
 import type { DynamicConfig, FormConfig } from "../types/FormConfig.js";
 import type { ScheduleCreationInfo } from "../types/Schedule.js";
 import type { ActionTypes } from "./Action.js";
@@ -6,8 +6,8 @@ import type { ActionTypes } from "./Action.js";
 export const dayInMinutes = 24 * 60;
 
 function createSchedule(
-    valueConfig: (inverter: Inverter) => Promise<DynamicConfig>,
-): (inverter: Inverter) => Promise<FormConfig<Omit<ScheduleCreationInfo, "action">>["data"]> {
+    valueConfig: (inverter: InverterChild) => Promise<DynamicConfig>,
+): (inverter: InverterChild) => Promise<FormConfig<Omit<ScheduleCreationInfo, "action">>["data"]> {
     return async (inverter) => ({
         inverterId: {
             type: "number",
@@ -33,7 +33,7 @@ function createSchedule(
     });
 }
 
-export const scheduleConfig: Record<ActionTypes, (inverter: Inverter) => Promise<FormConfig<Omit<ScheduleCreationInfo, "action">>["data"]>> = {
+export const scheduleConfig: Record<ActionTypes, (inverter: InverterChild) => Promise<FormConfig<Omit<ScheduleCreationInfo, "action">>["data"]>> = {
     charge: createSchedule(async (inverter) => ({
         type: "slider",
         min: -(await inverter.getMaxDischargeRate()),

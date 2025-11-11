@@ -19,31 +19,7 @@ export class Inverter<OPTIONS extends GeneralSettings = GeneralSettings> {
     @Column("varchar")
     public readonly type!: InverterType;
 
-    public async start(): Promise<void> {
-        throw new Error("Not implemented.");
-    }
-    public async stop(): Promise<void> {
-        throw new Error("Not implemented.");
-    }
-    public async getStatus(): Promise<Status> {
-        throw new Error("Not implemented.");
-    }
-    public async getMaxChargeRate(): Promise<number> {
-        throw new Error("Not implemented.");
-    }
-    public async getMaxDischargeRate(): Promise<number> {
-        throw new Error("Not implemented.");
-    }
-    public async chargeBattery(wattHour: number): Promise<void> {
-        throw new Error("Not implemented.");
-    }
-    public async dischargeBattery(wattHour: number): Promise<void> {
-        throw new Error("Not implemented.");
-    }
-    public async toShortInfo(): Promise<InverterShortInfoResponse> {
-        throw new Error("Not implemented.");
-    }
-    public async toInfo(): Promise<InverterInfoResponse> {
+    public async connect<T>(callback: (inverter: InverterChild) => Promise<T> | T): Promise<T> {
         throw new Error("Not implemented.");
     }
 }
@@ -52,25 +28,17 @@ export abstract class InverterChild<OPTIONS extends GeneralSettings = GeneralSet
     private hasStarted = 0;
     protected abstract startInverter(): Promise<void>;
     protected abstract stopInverter(): Promise<void>;
-    public async start(): Promise<void> {
-        if (this.hasStarted) {
-            this.hasStarted++;
-            return;
-        }
-        this.hasStarted++;
+    public override async connect<T>(callback: (inverter: InverterChild) => Promise<T> | T): Promise<T> {
         try {
-            await this.startInverter();
-        } catch (err) {
-            console.error(err);
-            this.hasStarted--;
+            if (this.hasStarted++ === 0) {
+                await this.startInverter();
+            }
+            return await callback(this);
+        } finally {
+            if (--this.hasStarted === 0) {
+                await this.stopInverter();
+            }
         }
-    }
-    public async stop(): Promise<void> {
-        if (!this.hasStarted) {
-            return;
-        }
-        await this.stopInverter();
-        this.hasStarted--;
     }
 
     public abstract getStatus(): Promise<Status>;

@@ -9,8 +9,9 @@ export class Init1761495151626 implements MigrationInterface {
                 name: "id",
                 type: "int",
                 isPrimary: true,
-                primaryKeyConstraintName: "inverter_id_pk",
+                isGenerated: true,
                 generationStrategy: "increment",
+                primaryKeyConstraintName: "inverter_id_pk",
             }, {
                 name: "name",
                 type: "varchar",
@@ -29,8 +30,9 @@ export class Init1761495151626 implements MigrationInterface {
                 name: "id",
                 type: "int",
                 isPrimary: true,
-                primaryKeyConstraintName: "action_id_pk",
+                isGenerated: true,
                 generationStrategy: "increment",
+                primaryKeyConstraintName: "action_id_pk",
             }, {
                 name: "inverter_id",
                 type: "int",
@@ -75,8 +77,9 @@ export class Init1761495151626 implements MigrationInterface {
                 name: "id",
                 type: "int",
                 isPrimary: true,
-                primaryKeyConstraintName: "schedule_id_pk",
+                isGenerated: true,
                 generationStrategy: "increment",
+                primaryKeyConstraintName: "schedule_id_pk",
             }, {
                 name: "inverter_id",
                 type: "int",

@@ -1,10 +1,10 @@
-import type { Inverter } from "../models/Inverter.js";
+import type { InverterChild } from "../models/Inverter.js";
 import type { ActionCreationInfo } from "../types/Action.js";
 import type { DynamicConfig, FormConfig } from "../types/FormConfig.js";
 
 function createAction(
-    valueConfig: (inverter: Inverter) => Promise<DynamicConfig>,
-): (inverter: Inverter) => Promise<FormConfig<Omit<ActionCreationInfo, "action">>["data"]> {
+    valueConfig: (inverter: InverterChild) => Promise<DynamicConfig>,
+): (inverter: InverterChild) => Promise<FormConfig<Omit<ActionCreationInfo, "action">>["data"]> {
     return async (inverter) => ({
         inverterId: {
             type: "number",
@@ -36,7 +36,7 @@ export const actionConfig = {
         step: 100,
         required: true,
     })),
-} satisfies Record<string, (inverter: Inverter) => Promise<FormConfig<Omit<ActionCreationInfo, "action">>["data"]>>;
+} satisfies Record<string, (inverter: InverterChild) => Promise<FormConfig<Omit<ActionCreationInfo, "action">>["data"]>>;
 
 export const ActionTypes = Object.keys(actionConfig);
 export type ActionTypes = keyof typeof actionConfig;

@@ -7,9 +7,6 @@ import { migrations } from "./migrations/migrations.js";
 
 function getDbType(input: string): DatabaseType {
     switch(input) {
-        case "memory":
-        case "sqlite":
-            return "sqlite";
         case "mysql":
             return "mysql";
         case "postgres":
