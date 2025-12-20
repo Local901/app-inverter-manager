@@ -3,6 +3,7 @@ import { ModbusBuilder, type ModbusClient, type ModbusTcpOptions } from "../../c
 import type { FormConfig } from "../../types/FormConfig.js";
 import { Status } from "../../types/Status.js";
 import { ChildEntity } from "typeorm";
+import type { SettingProperty } from "../../utilities/Settings.js";
 
 enum ControlMode {
     ACTIVE = 802,
@@ -60,22 +61,24 @@ export class SMASunnyTripower extends InverterChild<SMASunnyTripowerSettings> {
             dischargeRate: await this.getMaxDischargeRate(),
         };
     }
-    static config: FormConfig<SMASunnyTripowerSettings>["data"] = {
-        ip: {
-            type: "string",
-            required: true,
+    static config: SettingProperty[] = [
+        {
+            key: "ip",
+            type: "text",
             regex: "^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d).?\\b){4}$",
         },
-        deviceId: {
-            type: "number",
-            default: 3,
+        {
+            key: "deviceId",
+            type: "integer",
+            default: "3",
             min: 0,
         },
-        port: {
-            type: "number",
-            default: 502,
+        {
+            key: "port",
+            type: "integer",
+            default: "502",
             min: 0,
             max: 65535,
         }
-    };
+    ];
 }

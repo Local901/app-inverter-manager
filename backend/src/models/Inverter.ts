@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn, TableInheritance } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, TableInheritance, type Relation } from "typeorm";
 import type { GeneralSettings, InverterInfoResponse, InverterShortInfoResponse, InverterType } from "../types/Inverter.js";
 import type { Status } from "../types/Status.js";
+import { InverterSchedule } from "./InverterSchedule.js";
 
 export type PartialInverterResponse = Omit<InverterInfoResponse, keyof InverterShortInfoResponse>;
 
@@ -18,6 +19,9 @@ export class Inverter<OPTIONS extends GeneralSettings = GeneralSettings> {
 
     @Column("varchar")
     public readonly type!: InverterType;
+
+    @OneToMany(() => InverterSchedule, (inverterSchedule) => inverterSchedule.inverter)
+    public scheduleRelations?: Relation<InverterSchedule>[];
 
     public async connect<T>(callback: (inverter: InverterChild) => Promise<T> | T): Promise<T> {
         throw new Error("Not implemented.");

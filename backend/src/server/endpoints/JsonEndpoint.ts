@@ -1,5 +1,6 @@
 import type { Request, RequestHandler, Response } from "express";
 import { HttpError } from "../errors/HttpError.js";
+import { ValidationError } from "@local901/validator";
 
 export type Query = Record<string, undefined | string | Array<string>>;
 
@@ -23,6 +24,19 @@ export function JsonEndpoint<
             }
             res.json(response);
         } catch (e) {
+            if (!res.headersSent) {
+                if (e instanceof HttpError) {
+                    e.sendMessage(res);
+                    if (!res.headersSent) {
+                        next();
+                    }
+                    return;
+                }
+                if (e instanceof ValidationError) {
+                    res.status(401).json(e.toJson());
+                    return;
+                }
+            }
             if (!res.headersSent && e instanceof HttpError) {
                 e.sendMessage(res);
                 if (!res.headersSent) {

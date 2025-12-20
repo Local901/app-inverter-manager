@@ -25,53 +25,6 @@ export class Init1761495151626 implements MigrationInterface {
         }));
         
         await queryRunner.createTable(new Table({
-            name: "action",
-            columns: [{
-                name: "id",
-                type: "int",
-                isPrimary: true,
-                isGenerated: true,
-                generationStrategy: "increment",
-                primaryKeyConstraintName: "action_id_pk",
-            }, {
-                name: "inverter_id",
-                type: "int",
-                foreignKeyConstraintName: "action_inverter_id_fk",
-            }, {
-                name: "action",
-                type: "enum",
-                enum: ["charge"],
-            }, {
-                name: "active_from",
-                type: "timestamp",
-            }, {
-                name: "active_until",
-                type: "timestamp",
-            }, {
-                name: "repeat_weekly",
-                type: "bool",
-            }, {
-                name: "value",
-                type: "int",
-            }, {
-                name: "created_at",
-                type: "timestamp",
-                generatedIdentity: "BY DEFAULT",
-            }, {
-                name: "deleted_at",
-                type: "timestamp",
-            }],
-            foreignKeys: [{
-                name: "action_inverter_id_fk",
-                columnNames: ["inverter_id"],
-                referencedColumnNames: ["id"],
-                referencedTableName: "inverter",
-                onUpdate: "CASCADE",
-                onDelete: "CASCADE",
-            }],
-        }));
-
-        await queryRunner.createTable(new Table({
             name: "schedule",
             columns: [{
                 name: "id",
@@ -81,31 +34,82 @@ export class Init1761495151626 implements MigrationInterface {
                 generationStrategy: "increment",
                 primaryKeyConstraintName: "schedule_id_pk",
             }, {
+                name: "name",
+                type: "varchar",
+            }, {
+                name: "type",
+                type: "enum",
+                enum: ["DAY"],
+            }],
+        }));
+
+        await queryRunner.createTable(new Table({
+            name: "inverter_schedule",
+            columns: [{
                 name: "inverter_id",
                 type: "int",
-                foreignKeyConstraintName: "schedule_inverter_id_fk",
+                foreignKeyConstraintName: "inverter_schedule_inverter_id_fk",
+            }, {
+                name: "schedule_id",
+                type: "int",
+                foreignKeyConstraintName: "inverter_schedule_schedule_id_fk",
+            }, {
+                name: "order",
+                type: "int",
+            }],
+            foreignKeys: [{
+                columnNames: ["inverter_id"],
+                referencedColumnNames: ["id"],
+                referencedTableName: "inverter",
+                name: "inverter_schedule_inverter_id_fk",
+                onUpdate: "CASCADE",
+                onDelete: "CASCADE",
+            }, {
+                columnNames: ["schedule_id"],
+                referencedColumnNames: ["id"],
+                referencedTableName: "schedule",
+                name: "inverter_schedule_schedule_id_fk",
+                onUpdate: "CASCADE",
+                onDelete: "CASCADE",
+            }],
+        }));
+
+        await queryRunner.createTable(new Table({
+            name: "schedule_item",
+            columns: [{
+                name: "id",
+                type: "int",
+                isPrimary: true,
+                isGenerated: true,
+                generationStrategy: "increment",
+                primaryKeyConstraintName: "schedule_item_id_pk",
+            }, {
+                name: "schedule_id",
+                type: "int",
+                foreignKeyConstraintName: "schedule_item_schedule_id_fk",
+            }, {
+                name: "start_at",
+                type: "int",
+            }, {
+                name: "end_at",
+                type: "int",
+                isNullable: true,
             }, {
                 name: "action",
                 type: "varchar",
             }, {
                 name: "value",
                 type: "int",
-            }, {
-                name: "from",
-                type: "int",
-            }, {
-                name: "to",
-                type: "int",
             }],
             foreignKeys: [{
-                name: "schedule_inverter_id_fk",
-                columnNames: ["inverter_id"],
+                columnNames: ["schedule_id"],
                 referencedColumnNames: ["id"],
-                referencedTableName: "inverter",
+                referencedTableName: "schedule",
+                name: "schedule_item_schedule_id_fk",
                 onUpdate: "CASCADE",
                 onDelete: "CASCADE",
             }],
-        }));
+        }))
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {

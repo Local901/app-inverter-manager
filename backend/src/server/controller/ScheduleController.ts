@@ -1,91 +1,179 @@
 import { Router, type IRouter, type RequestHandler } from "express";
 import type { Controller } from "./Controller.js";
-import type { ScheduleRepository } from "../../repository/ScheduleRepository.js";
+import type { EntityManager } from "typeorm";
 import { JsonEndpoint } from "../endpoints/JsonEndpoint.js";
-import { v } from "@local901/validator";
+import { Schedule, ScheduleType } from "../../models/Schedule.js";
 import { NotFound } from "../errors/NotFound.js";
-import { InverterType } from "../../types/Inverter.js";
-import type { ScheduleCreationInfo } from "../../types/Schedule.js";
-import { ActionTypes } from "../../config/Action.js";
-import { dayInMinutes } from "../../config/Schedule.js";
-import { redirectError } from "../errors/RedirectError.js";
+import { ScheduleItem } from "../../models/ScheduleItem.js";
+import { v } from "@local901/validator";
 
-const idValidator = v.object({ id: v.string({ regex: /^\d+$/ }) });
-const getScheduleForInverterBodyValidator = v.object({ inverterId: v.string({ regex: /^\d+$/ }) });
+const scheduleBodyValidator = v.object({
+    name: v.string(),
+    type: v.enum(ScheduleType),
+});
 
-const createScheduleParams = v.object({
-    type: v.string<ActionTypes>({ enum: ActionTypes }),
+const timeSlotBodyValidator = v.object({
+    action: v.string(),
+    value: v.string({ regex: /^\d+$/ }),
+});
+
+const deleteTimeSlotBodyValidator = v.object({
+    action: v.string(),
 });
 
 export class ScheduleController implements Controller {
-    public constructor(
-        private readonly scheduleRepository: ScheduleRepository,
-    ) {}
+    public constructor(private readonly manager: EntityManager) {}
 
-    private getScheduleForInverter(): RequestHandler {
-        return JsonEndpoint<{ inverterId: string }>(async (req) => {
-            if (!getScheduleForInverterBodyValidator.validate(req.body)) {
-                throw new NotFound();
+    public getSchedules(): RequestHandler {
+        return JsonEndpoint(async () => {
+            const schedules = await this.manager.find(Schedule);
+
+            return schedules.map((schedule) => ({
+                id: schedule.id,
+                name: schedule.name,
+                type: schedule.type,
+            }));
+        });
+    }
+
+    public createSchedule(): RequestHandler {
+        return JsonEndpoint(async (req) => {
+            const validationResult = scheduleBodyValidator.validateReturn(req.body);
+            if (!scheduleBodyValidator.validateResult(req.body, validationResult)) {
+                throw validationResult;
             }
-            const id = Number.parseInt(req.body.inverterId);
 
-            const schedule = await this.scheduleRepository.getScheduleForInverter(id);
+            const schedule = this.manager.create(Schedule, {
+                name: req.body.name,
+                type: req.body.type,
+            });
+            this.manager.save(schedule);
 
             return {
-                enabled: true,
-                elements: schedule.map((s) => ({
-                    id: s.id,
-                    action: s.action,
-                    value: s.value,
-                    from: s.from,
-                    to: s.to,
-                })),
+                id: schedule.id,
             };
         });
     }
 
-    private createScheduleElement(): RequestHandler {
-        return JsonEndpoint<{ inverterId: string }, {}, Record<keyof ScheduleCreationInfo, string>>(async (req) => {
-            if (!createScheduleParams.validate(req.params)) {
+    public getSchedule(): RequestHandler {
+        return JsonEndpoint<{ id: string }>(async (req) => {
+            const id = Number.parseInt(req.params.id);
+            if (isNaN(id)) {
                 throw new NotFound();
             }
 
-            const id = Number.parseInt(req.body.inverterId);
-            const type = req.params.type;
-
-            await this.scheduleRepository.createScheduleElement({
-                inverterId: id,
-                action: type,
-                value: Number.parseInt(req.body.value),
-                from: Math.max(0, Math.min(Number.parseInt(req.body.from), dayInMinutes)),
-                to: Math.max(0, Math.min(Number.parseInt(req.body.to), dayInMinutes)),
+            const schedule = await this.manager.findOne(Schedule, {
+                where: { id },
+                relations: {
+                    // inverterRelations: true,
+                    items: true,
+                },
             });
+            if (!schedule) {
+                throw new NotFound();
+            }
 
-            throw new redirectError(`/inverter/${id}`)
+            return schedule.toJson();
         });
     }
 
-    private deleteScheduleElement(): RequestHandler {
+    public deleteSchedule(): RequestHandler {
         return JsonEndpoint<{ id: string }>(async (req) => {
-            if (!idValidator.validate(req.params)) {
+            const id = Number.parseInt(req.params.id);
+            if (isNaN(id)) {
+                return;
+            }
+
+            await this.manager.delete(Schedule, { id });
+        });
+    }
+
+    public getTimeSlot(): RequestHandler {
+        return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
+            const id = Number.parseInt(req.params.id);
+            const timeSlot = Number.parseInt(req.params.timeSlot);
+            if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }
 
-            const id = Number.parseInt(req.params.id);
+            const items = await this.manager.findBy(ScheduleItem, {
+                scheduleId: id,
+                startAt: timeSlot,
+            });
 
-            await this.scheduleRepository.deleteScheduleElement(id);
+            return {
+                slot: timeSlot,
+                actions: Object.fromEntries(items.map((item) => [item.action, `${item.value}`])),
+            };
+        });
+    }
+
+    public setTimeSlot(): RequestHandler {
+        return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
+            const id = Number.parseInt(req.params.id);
+            const timeSlot = Number.parseInt(req.params.timeSlot);
+            if (isNaN(id) || isNaN(timeSlot)) {
+                throw new NotFound();
+            }
+            const validationResult = timeSlotBodyValidator.validateReturn(req.body);
+            if (!timeSlotBodyValidator.validateResult(req.body, validationResult)) {
+                throw validationResult;
+            }
+
+            const { action, value: valueString } = req.body;
+            const value = Number.parseInt(valueString);
+
+            const item = await this.manager.findOneBy(ScheduleItem, {
+                scheduleId: id,
+                startAt: timeSlot,
+                action,
+            });
+
+            if (!item) {
+                await this.manager.save(this.manager.create(ScheduleItem, {
+                    scheduleId: id,
+                    startAt: timeSlot,
+                    action,
+                    value,
+                }));
+                return;
+            }
+            await this.manager.update(ScheduleItem, { id: item.id }, {
+                value,
+            });
+        });
+    }
+
+    public deleteTimeSlot(): RequestHandler {
+        return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
+            const id = Number.parseInt(req.params.id);
+            const timeSlot = Number.parseInt(req.params.timeSlot);
+            if (isNaN(id) || isNaN(timeSlot)) {
+                throw new NotFound();
+            }
+            const validationResult = deleteTimeSlotBodyValidator.validateReturn(req.body);
+            if (!deleteTimeSlotBodyValidator.validateResult(req.body, validationResult)) {
+                throw validationResult;
+            }
+
+            await this.manager.delete(ScheduleItem, {
+                scheduleId: id,
+                startAt: timeSlot,
+                action: req.body.action,
+            });
         });
     }
 
     public mount(router: IRouter): void {
         const scheduleRouter = Router();
 
-        scheduleRouter.get(/\/all\/(?<inverterId>\d+)\/?$/, this.getScheduleForInverter());
-        // scheduleRouter.post(/\/(?<id>\d+)\/?$/, );
-        scheduleRouter.delete(/\/(?<id>\d+)\/?$/, this.deleteScheduleElement());
-
-        scheduleRouter.get("/types", JsonEndpoint(() => InverterType));
-        scheduleRouter.post("/create/:type", this.createScheduleElement());
+        scheduleRouter.get("/", this.getSchedules());
+        scheduleRouter.post("/", this.createSchedule());
+        scheduleRouter.get("/:id", this.getSchedule());
+        scheduleRouter.delete("/:id", this.deleteSchedule());
+        scheduleRouter.get("/:id/:timeSlot", this.getTimeSlot());
+        scheduleRouter.post("/:id/:timeSlot", this.setTimeSlot());
+        scheduleRouter.delete("/:id/:timeSlot", this.deleteTimeSlot());
 
         router.use("/schedule", scheduleRouter);
     }

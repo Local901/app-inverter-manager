@@ -1,0 +1,456 @@
+openapi: "3.0.0"
+info:
+  title: Inverter Manager API
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8080
+    description: Localhost
+paths:
+  /api/inverter:
+    get:
+      summary: List inverters
+      tags:
+        - inverter
+      responses:
+        200:
+          description: List of short inverter info.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inverters:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        status:
+                          type: string
+                        type:
+                          type: string
+    post:
+      summary: "Create an inverter."
+      tags:
+        - inverter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+                - options
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                settings:
+                  type: object
+                  additionalProperties:
+                    type: string
+      responses:
+        201:
+          description: Inverter was created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+        401:
+          description: Some input values are wrong.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Validation"
+  /api/inverter/{id}:
+    get:
+      summary: Get full list of information for a specific inverter.
+      tags:
+        - inverter
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Identifier of the inverter.
+      responses:
+        200:
+          description: Complete inverter information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                  chargeRate:
+                    type: number
+                    description: The rate at which the battery can be charge.
+                  dischargeRate:
+                    type: number
+                    description: The rate at which the battery can be discharged.
+    delete:
+      summary: Remove an inverter.
+      tags:
+        - inverter
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Identifier of the inverter.
+      responses:
+        200:
+          description: The inverter was removed.
+  /api/inverter/{id}/settings:
+    get:
+      summary: Get setting of an inverter.
+      tags:
+        - inverter
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Inverter id.
+      responses:
+        200:
+          description: Active setting of the inverter.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+    post:
+      summary: Update setting of an inverter.
+      tags:
+        - inverter
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Inverter id.
+      requestBody:
+        description: New settings.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+      responses:
+        200:
+          description: Update successful
+  /api/inverter/type:
+    get:
+      summary: Get a list of available inverter types.
+      tags:
+        - inverter
+      responses:
+        200:
+          description: Inverter types.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /api/inverter/type/{type}:
+    get:
+      summary: Get the creation settings for a type of inverter options.
+      tags:
+        - inverter
+      parameters:
+        - in: path
+          name: type
+          schema:
+            type: string
+          required: true
+          description: Specific type.
+      responses:
+        200:
+          description: Inverter option creation settings.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                    default:
+                      type: string
+                    optional:
+                      type: boolean
+                    type:
+                      type: string
+                    min:
+                      type: integer
+                    max:
+                      type: integer
+                    regex:
+                      type: string
+  /api/schedule:
+    get:
+      summary: List schedules.
+      tags:
+        - schedule
+      responses:
+        200:
+          description: List of short schedule information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schedules:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        type:
+                          $ref: "#/components/schemas/ScheduleType"
+    post:
+      summary: Create a schedules.
+      tags:
+        - schedule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - type
+              properties:
+                name:
+                  type: string
+                type:
+                  $ref: "#/components/schemas/ScheduleType"
+      responses:
+        200:
+          description: "Schedule created successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+        401:
+          description: Some input values are wrong.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Validation"
+  /api/schedule/{id}:
+    get:
+      summary: Get schedule data.
+      tags:
+        - schedule
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Schedule id.
+      responses:
+        200:
+          description: Schedule info.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  type:
+                    $ref: "#/components/schemas/ScheduleType"
+                  time_slots:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        slot:
+                          type: integer
+                        actions:
+                          type: object
+                          additionalProperties:
+                            type: string
+        404:
+          description: Not schedule found.
+    delete:
+      summary: Delete the schedules.
+      tags:
+        - schedule
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Schedule id.
+      responses:
+        200:
+          description: Schedule deleted.
+  /api/schedule/{id}/{timeslot}:
+    get:
+      summary: Get current information for a time slot.
+      tags:
+        - schedule
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Schedule id.
+        - in: path
+          name: timeslot
+          schema:
+            type: integer
+          required: true
+          description: Time slot.
+      responses:
+        200:
+          description: Get time slot information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  slot:
+                    type: integer
+                  actions:
+                    type: object
+                    additionalProperties:
+                      type: string
+    post:
+      summary: Set action for a time slot.
+      tags:
+        - schedule
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Schedule id.
+        - in: path
+          name: timeslot
+          schema:
+            type: integer
+          required: true
+          description: Time slot.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                value:
+                  type: string
+      responses:
+        200:
+          description: Time slot updated.
+        401:
+          description: Some input values are wrong.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Validation"
+    delete:
+      summary: Clear a time slot (action).
+      tags:
+        - schedule
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Schedule id.
+        - in: path
+          name: timeslot
+          schema:
+            type: integer
+          required: true
+          description: Time slot.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                action:
+                  type: string
+      responses:
+        200:
+          description: Time slot updated.
+components:
+  schemas:
+    Validation:
+      type: object
+      properties:
+        type:
+          type: string
+        error:
+          type: string
+          enum:
+            - INCORRECT_TYPE
+            - INCORRECT_FORMAT
+            - UNKNOWN_FIELD
+            - NO_MATCH
+            - VALUE_BELOW
+            - VALUE_ABOVE
+            - VALUE_BELOW_EXCLUSIVE
+            - VALUE_ABOVE_EXCLUSIVE
+            - VALUE_SHORT
+            - VALUE_LONG
+        fields:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Validation"
+      required:
+        - type
+        - error
+    ScheduleType:
+      type: string
+      enum:
+        - DAY

@@ -4,7 +4,6 @@ import { config } from "../config/index.js";
 import type { Controller } from "./controller/Controller.js";
 import { InverterController } from "./controller/InverterController.js";
 import type { Container } from "../types/Container.js";
-import { ActionController } from "./controller/ActionController.js";
 import { ScheduleController } from "./controller/ScheduleController.js";
 
 export class HttpServer {
@@ -19,9 +18,8 @@ export class HttpServer {
     ) {
         this.app = express();
         this.controllers = [
-            new InverterController(container.inverterRepository),
-            new ActionController(container.actionRepository),
-            new ScheduleController(container.scheduleRepository),
+            new InverterController(container.dataStore.manager),
+            new ScheduleController(container.dataStore.manager),
         ];
 
         this.route(this.app);

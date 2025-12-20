@@ -1,10 +1,10 @@
 import type { Inverter } from "../models/Inverter.js";
 import { SMASunnyTripower } from "../models/inverters/SMASunnyTripower.js";
-import type { FormConfig } from "../types/FormConfig.js";
+import type { SettingProperty } from "../utilities/Settings.js";
 
 export interface InverterClass {
     new (): Inverter;
-    config: FormConfig["data"];
+    config: SettingProperty[];
 }
 
 export const InverterInfos: Record<string, InverterClass | undefined> = {

@@ -1,33 +1,53 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn, type Relation } from "typeorm";
+import { InverterSchedule } from "./InverterSchedule.js";
+import { ScheduleItem } from "./ScheduleItem.js";
+
+export enum ScheduleType {
+    DAY = "DAY",
+}
+
+export interface ScheduleJson {
+    id: string,
+    name: string,
+    type: ScheduleType,
+    time_slots: Array<{
+        slot: number,
+        actions: Record<string, string>,
+    }>,
+}
 
 @Entity()
 export class Schedule {
     @PrimaryGeneratedColumn("increment", { type: "int" })
     public readonly id!: number;
 
-    @Column("int")
-    public inverterId!: number;
-
     @Column("varchar")
-    public action!: string;
+    public name!: string;
 
-    @Column("int")
-    public value!: number;
+    @Column("enum", { enum: ScheduleType })
+    public type!: ScheduleType;
 
-    @Column("int")
-    public from!: number;
+    @OneToMany(() => InverterSchedule, (inverterSchedule) => inverterSchedule.schedule)
+    public inverterRelations?: Relation<InverterSchedule>[];
 
-    @Column("int")
-    public to!: number;
+    @OneToMany(() => ScheduleItem, (item) => item.schedule)
+    public items?: Relation<ScheduleItem>[];
 
-    public isActive(nowOverride?: Date): boolean {
-        const now = nowOverride ?? new Date();
+    public toJson(): ScheduleJson {
+        const actionRecord = (this.items ?? []).reduce((record: Record<number, [string, string][]>, item) => {
+            record[item.startAt] ??= [];
+            record[item.startAt].push([item.action, `${item.value}`]);
+            return record;
+        }, {})
 
-        const timeIndex = now.getUTCHours() * 60 + now.getUTCMinutes();
-
-        if (this.from < this.to) {
-            return this.from <= timeIndex && timeIndex <= this.to;
+        return {
+            id: `${this.id}`,
+            name: this.name,
+            type: this.type,
+            time_slots: Object.entries(actionRecord).map(([slot, values]) => ({
+                slot: Number.parseInt(slot),
+                actions: Object.fromEntries(values),
+            })),
         }
-        return this.from <= timeIndex || timeIndex <= this.to;
     }
 }
