@@ -6,6 +6,14 @@ export enum ScheduleType {
     DAY = "DAY",
 }
 
+export const ItemRangeData: Record<ScheduleType, { before: number, range: number, isDiscreet: boolean }> = {
+    [ScheduleType.DAY]: {
+        range: 24 * 60 * 60,
+        before: 3600,
+        isDiscreet: true,
+    }
+}
+
 export interface ScheduleJson {
     id: string,
     name: string,
@@ -49,5 +57,22 @@ export class Schedule {
                 actions: Object.fromEntries(values),
             })),
         }
+    }
+
+    public getNow(): number {
+        const rangeData = ItemRangeData[this.type];
+        return Math.round(Date.now() / 1000) % rangeData.range;
+    }
+
+    public getItemRange(): [number, number] {
+        const rangeData = ItemRangeData[this.type];
+        const now = this.getNow();
+
+        return [
+            rangeData.isDiscreet
+                ? Math.floor((now) / rangeData.before) * rangeData.before // item only effect their discreet section.
+                : (now - rangeData.before) % rangeData.range, // item have an effective length.
+            now,
+        ];
     }
 }

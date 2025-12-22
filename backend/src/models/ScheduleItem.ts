@@ -9,9 +9,11 @@ export class ScheduleItem {
     @Column("int")
     public readonly scheduleId!: number;
 
+    /** Timestamp in seconds. */
     @Column("int")
     public startAt!: number;
 
+    /** Timestamp in seconds. */
     @Column("int", { nullable: true })
     public endAt?: number;
 
@@ -24,4 +26,13 @@ export class ScheduleItem {
     @ManyToOne(() => Schedule, (schedule) => schedule.items, { onUpdate: "CASCADE", onDelete: "CASCADE" })
     @JoinColumn()
     public schedule?: Relation<Schedule>;
+
+    public getTimeTillUpdate(from: number, range: number): number {
+        return Math.min(
+            (this.startAt - from) % range,
+            this.endAt
+                ? (this.endAt - from) % range
+                : range,
+        );
+    }
 }

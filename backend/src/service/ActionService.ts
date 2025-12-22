@@ -1,54 +1,44 @@
-import { ActionTypes } from "../config/Action.js";
-import type { Action } from "../models/Action.js";
-import type { Inverter } from "../models/Inverter.js";
-import type { ActionRepository } from "../repository/ActionRepository.js";
-import type { InverterRepository } from "../repository/InverterRepository.js";
-import type { ScheduleRepository } from "../repository/ScheduleRepository.js";
+import { In, Not, type EntityManager } from "typeorm";
+import { Inverter, type InverterChild } from "../models/Inverter.js";
 import { Status } from "../types/Status.js";
+import { ItemRangeData, Schedule } from "../models/Schedule.js";
+import type { ScheduleItem } from "../models/ScheduleItem.js";
 
-type actionLike = {
-    action: string,
-    value: number,
-    repeatWeekly?: boolean,
-    schedule?: boolean,
+type Actions = {
+    /** Next action in number of seconds */
+    nextAction: number;
+    actions: Record<string, [number | undefined, number]>;
 }
 
 export class ActionService {
-    private timeoutRef: NodeJS.Timeout | undefined;
+    private timeoutRef?: ReturnType<typeof setTimeout>;
     private processing = false;
+    private inverterChecks: Record<number, number> = {}
 
     public constructor(
-        public readonly inverterRepository: InverterRepository,
-        public readonly actionRepository: ActionRepository,
-        public readonly scheduleRepository: ScheduleRepository,
+        private readonly manager: EntityManager,
     ) {
-        this.startLoop();
+        void this.loop();
     }
 
-    private startLoop() {
-        if (this.timeoutRef) {
-            console.warn("Loop already active.");
-            return;
+    private async loop(): Promise<void> {
+        if (this.processing) {
+            console.warn("Previous process still in progress. (skip)");
+            return
         }
-        let processing = false;
-
-        const action = async () => {
-            if (processing) {
-                console.warn("Previous process still in progress. (skip)");
-                return
-            }
-            processing = true;
-            try {
-                await this.loop();
-            } catch (err) {
-                console.error(`Loop exited with an error:\n${err}\n${err instanceof Error ? err.stack : ""}`);
-            } finally {
-                processing = false;
-            }
+        this.processing = true;
+        try {
+            await this.process();
+        } catch (err) {
+            console.error(`Loop exited with an error:\n${err}\n${err instanceof Error ? err.stack : ""}`);
+        } finally {
+            this.processing = false;
         }
 
-        this.timeoutRef = setInterval(action, 5 * 60000); // Every 5 minutes.
-        setImmediate(action);
+        this.timeoutRef = setTimeout(
+            this.loop,
+            Math.max(60000, Math.min(...Object.values(this.inverterChecks)) - Date.now()),
+        );
     }
 
     public stop(): void {
@@ -56,69 +46,150 @@ export class ActionService {
         this.timeoutRef = undefined;
     }
 
-    private async loop(): Promise<void> {
-        const inverters = await this.inverterRepository.getAllInverters();
-        const now = new Date();
+    private async process(): Promise<void> {
+        const inactiveInverters = Object.entries(this.inverterChecks)
+            .filter(([,timestamp]) => timestamp > Date.now())
+            .map(([key]) => key);
+        const inverters = await this.manager.findBy(Inverter, { id: Not(In(inactiveInverters)) });
 
         for (const inverter of inverters) {
             try {
-                console.log(`Perform actions on ${inverter.name}`);
-                await inverter.start();
+                console.log(`[${new Date().toISOString()}] Perform actions on ${inverter.name}`);
+                await inverter.connect(async (inv) => {
+                    if ((await inv.getStatus()) !== Status.OK) {
+                        // TODO: Add error message to the inverter to allow the user to know why no action was done.
+                        console.log(`Abort actions on ${inverter.name}. Status was not OK.`);
+                        return;
+                    }
 
-                if ((await inverter.getStatus()) !== Status.OK) {
-                    // TODO: Add error message to the inverter to allow the user to know why no action was done.
-                    console.log(`Abort actions on ${inverter.name}. Status was not OK.`);
-                    continue;
-                }
+                    const schedules = await this.manager.find(Schedule, {
+                        where: {
+                            inverterRelations: {
+                                inverterId: inv.id,
+                            }
+                        },
+                        order: {
+                            inverterRelations: {
+                                order: "DESC",
+                            },
+                        },
+                        relations: {
+                            items: true,
+                        },
+                    });
 
-                const [actions, schedule] = await Promise.all([
-                    this.actionRepository.getActionsForInverter(inverter.id).then((result) => result.filter((action) => action.isActive(now))),
-                    this.scheduleRepository.getScheduleForInverter(inverter.id).then((result) => result.filter((schedule) => schedule.isActive(now)).map((s) => ({ 
-                        action: s.action,
-                        value: s.value,
-                        schedule: true,
-                    } as actionLike))),
-                ]);
-
-                await this.performActions(inverter, [...actions, ...schedule]);
+                    const actions = await this.calculateActions(schedules);
+                    this.inverterChecks[inv.id] = Date.now() + (actions.nextAction * 1000);
+                    await this.performActions(inv, actions);
+                });
             } catch (error) {
                 console.error(error);
-            } finally {
-                await inverter.stop();
             }
         }
     }
 
-    private async performActions(inverter: Inverter, actions: actionLike[]): Promise<void> {
-        if (actions.length === 0) {
-            return;
+    private valueBetween(value: number, start: number, end: number): boolean {
+        if (start <= end) {
+            return start <= value && value < end;
         }
-        for (const actionType of ActionTypes) {
-            const action = actions.reduce<actionLike | null>((prev, next) => {
-                if (next.action !== actionType) {
-                    return prev;
-                }
-                if (!prev || (prev.repeatWeekly && !next.repeatWeekly ) || (prev.schedule && (!next.repeatWeekly || !next.schedule))) {
-                    return next;
-                }
-                if ((!prev.repeatWeekly && !prev.schedule) && (next.repeatWeekly || next.schedule)) {
-                    return prev;
-                }
-                throw new Error("Action overlap. Can't resolve.");
-            }, null);
-            if (!action) {
-                continue; // No action of type found.
+        return value < end || start <= value;
+    }
+
+    private filterItems(schedule: Schedule): (item: ScheduleItem) => boolean {
+        const range = schedule.getItemRange();
+        return (item) => {
+            if (!item.endAt) {
+                return this.valueBetween(item.startAt, ...range);
+            }
+            const now = schedule.getNow();
+            return this.valueBetween(now, item.startAt, item.endAt);
+        }
+    }
+
+    private sortItems(schedule: Schedule): (i1: ScheduleItem, i2: ScheduleItem) => number {
+        const now = schedule.getNow();
+        const data = ItemRangeData[schedule.type];
+        return (i1, i2) => {
+            const t1 = (i1.startAt - now) % data.range;
+            const t2 = (i2.startAt - now) % data.range;
+            return t1 - t2;
+        }
+    }
+
+    private async calculateActions(schedules: Schedule[]): Promise<Actions> {
+        const result: Actions = {
+            nextAction: 15 * 60, // Max timeout of 15 minutes
+            actions: {
+                charge: [undefined, 0],
+            },
+        };
+
+        for (const schedule of schedules) {
+            if (!schedule.items) {
+                continue;
             }
 
-            switch (actionType) {
-                case "charge": {
-                    const value = Math.max(-(await inverter.getMaxDischargeRate()), Math.min(action.value, await inverter.getMaxChargeRate()));
-                    console.log(`Charge ${inverter.id} => ${value}`);
-                    await inverter.chargeBattery(value);
-                    break;
+            const now = schedule.getNow();
+            const actions: Partial<Record<string, [number, number]>> = {};
+            const items = schedule.items
+                .filter(this.filterItems(schedule))
+                .sort(this.sortItems(schedule));
+            
+            for (const item of items) {
+                actions[item.action] = [item.startAt, item.value];
+            }
+
+            // Apply action
+            for (const [action, actionValue] of Object.entries(actions)) {
+                if (!actionValue) continue;
+
+                const currentActionValue = result.actions[action];
+                if (currentActionValue[0] === undefined) {
+                    result.actions[action] = actionValue;
+                    continue;
                 }
+                if (currentActionValue[0] > now) {
+                    if (currentActionValue[0] <= actionValue[0] || actionValue[0] <= now) {
+                        result.actions[action] = actionValue;
+                    }
+                    continue;
+                }
+                if (currentActionValue[0] <= now && actionValue[0] <= now) {
+                    if (currentActionValue[0] <= actionValue[0]) {
+                        result.actions[action] = actionValue;
+                    }
+                }
+            }
+
+            // Find Next action time stamp
+            const data = ItemRangeData[schedule.type];
+            const maxNext = data.isDiscreet
+                ? (Math.ceil(now / data.before) * data.before) - now
+                : data.before;
+            const nextItem = schedule.items
+                .sort((i1, i2) => {
+                    const t1 = i1.getTimeTillUpdate(now, data.range);
+                    const t2 = i2.getTimeTillUpdate(now, data.range);
+                    return t1 - t2;
+                }) // First item should also be able to be a item that ends first.
+                .shift();
+            if (!nextItem) {
+                continue;
+            }
+            // Next action in at least one minute or the first action that updates what should happen.
+            result.nextAction = Math.max(60, Math.min(result.nextAction, maxNext, nextItem.getTimeTillUpdate(now, data.range)));
+        }
+
+        return result;
+    }
+
+    private async performActions(inverter: InverterChild, actions: Actions): Promise<void> {
+        for (const [action, actionValue] of Object.entries(actions.actions)) {
+            switch (action.toLowerCase()) {
+                case "charge":
+                    await inverter.chargeBattery(actionValue[1]);
                 default:
-                    throw new Error(`Type '${actionType}' is not implemented.`);
+                    console.log(`[${new Date().toISOString()}] Unknown action '${action}' for inverter '${inverter.name}'`);
             }
         }
     }
