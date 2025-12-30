@@ -1,9 +1,9 @@
 import { createSignal, For, Match, Switch, type Component } from "solid-js";
-import type { DynamicConfig } from "src/models/FormConfig";
+import type { FormConfig } from "../../models/FormConfig.js";
 
 export const GeneratedInput: Component<{
     key: string,
-    config: DynamicConfig,
+    config: FormConfig,
 }> = ({key, config}) => {
     const [value, setValue] = createSignal<string>(config.value?.toString() ?? "");
 
@@ -12,7 +12,7 @@ export const GeneratedInput: Component<{
             {key}
         </label>
         <Switch>
-            <Match when={config.type === "string"}>
+            <Match when={config.type === "text"}>
                 <input
                     type="text"
                     id={`input_${key}`}

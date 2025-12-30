@@ -8,7 +8,10 @@ export interface InverterInfo {
     status: Status,
     chargeRate: number,
     dischargeRate: number,
-    // TODO
+    schedules: Array<{
+        id: string,
+        name: string,
+    }>
 }
 
 export const InverterInfoValidator = v.object<InverterInfo>({
@@ -18,4 +21,8 @@ export const InverterInfoValidator = v.object<InverterInfo>({
     status: v.enum(Status),
     chargeRate: v.int(),
     dischargeRate: v.int(),
+    schedules: v.array(v.object({
+        id: v.string(),
+        name: v.string()
+    }, { additionalProperties: true })),
 }, { additionalProperties: true });

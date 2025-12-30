@@ -8,9 +8,11 @@ export interface InverterInfoShort {
     status: Status,
 }
 
-export const InverterInfoShortValidator = v.object<InverterInfoShort>({
-    id: v.int(),
-    name: v.string(),
-    type: v.string(),
-    status: v.enum(Status),
-}, { additionalProperties: true });
+export const InverterInfoShortValidator = v.object({
+    inverters: v.array(v.object<InverterInfoShort>({
+        id: v.int(),
+        name: v.string(),
+        type: v.string(),
+        status: v.enum(Status),
+    }, { additionalProperties: true }))
+});

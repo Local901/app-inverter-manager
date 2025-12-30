@@ -8,6 +8,7 @@ import { NavBar } from "./components/navbar";
 import { InvertersPage } from "./page/Inverters";
 import { InverterPage } from "./page/Inverter";
 import { InverterSettingsPage } from "./page/InverterSettings";
+import { SchedulePage } from "./page/Schedules.jsx";
 
 const container = document.querySelector("#root");
 
@@ -25,6 +26,7 @@ void render(() => (
                     <Route path="/inverter" component={InvertersPage}/>
                     <Route path="/inverter/:id" component={InverterPage}/>
                     <Route path="/inverter/:id/settings" component={InverterSettingsPage}/>
+                    <Route path="/schedule" component={SchedulePage}/>
                 </Router>
             </main>
         </Stack>

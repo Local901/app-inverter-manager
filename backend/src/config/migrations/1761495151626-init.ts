@@ -48,14 +48,17 @@ export class Init1761495151626 implements MigrationInterface {
             columns: [{
                 name: "inverter_id",
                 type: "int",
+                isPrimary: true,
                 foreignKeyConstraintName: "inverter_schedule_inverter_id_fk",
             }, {
                 name: "schedule_id",
                 type: "int",
+                isPrimary: true,
                 foreignKeyConstraintName: "inverter_schedule_schedule_id_fk",
             }, {
                 name: "order",
                 type: "int",
+                isPrimary: true,
             }],
             foreignKeys: [{
                 columnNames: ["inverter_id"],

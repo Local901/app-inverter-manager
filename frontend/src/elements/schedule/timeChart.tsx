@@ -1,7 +1,5 @@
 import { createEffect, createMemo, createSignal, For, Show, type Component } from "solid-js"
-import { validateFetchMany } from "src/actions/validateFetch";
-import { ActionInfoValidator, type ActionInfo } from "src/models/ActionInfo";
-import { ActionDialog } from "../../components/dialog/ActionDialog.jsx";
+import { validateFetchMany } from "../../actions/validateFetch";
 import type { DialogControls } from "../../components/dialog/index.jsx";
 
 const Hours = [...Array(24).keys()];
@@ -9,7 +7,6 @@ const Hours = [...Array(24).keys()];
 export type TimeChartProps = {
     inverterId: string,
     day?: number,
-    onAction?: (action: ActionInfo) => void, 
 };
 
 export const TimeChart: Component<TimeChartProps> = (props) => {

@@ -28,11 +28,13 @@ export class ScheduleController implements Controller {
         return JsonEndpoint(async () => {
             const schedules = await this.manager.find(Schedule);
 
-            return schedules.map((schedule) => ({
-                id: schedule.id,
-                name: schedule.name,
-                type: schedule.type,
-            }));
+            return {
+                schedules: schedules.map((schedule) => ({
+                    id: `${schedule.id}`,
+                    name: schedule.name,
+                    type: schedule.type,
+                })),
+            };
         });
     }
 

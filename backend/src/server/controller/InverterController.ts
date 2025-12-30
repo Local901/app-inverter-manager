@@ -8,6 +8,7 @@ import { NotFound } from "../errors/NotFound.js";
 import { Inverter } from "../../models/Inverter.js";
 import type { EntityManager } from "typeorm";
 import { parseSettings } from "../../utilities/Settings.js";
+import { Schedule } from "../../models/Schedule.js";
 
 const settingsValidator = v.record(v.string());
 
@@ -88,7 +89,27 @@ export class InverterController implements Controller {
                 throw new NotFound();
             }
 
-            return inverter.connect((i) => i.toInfo());
+            const info = await inverter.connect((i) => i.toInfo());
+            const schedules = await this.manager.find(Schedule, {
+                where: {
+                    inverterRelations: {
+                        inverterId: inverter.id,
+                    },
+                },
+                order: {
+                    inverterRelations: {
+                        order: "ASC",
+                    },
+                },
+            });
+
+            return {
+                ...info,
+                schedules: schedules.map((s) => ({
+                    id: `${s.id}`,
+                    name: s.name,
+                })),
+            }
         });
     }
 

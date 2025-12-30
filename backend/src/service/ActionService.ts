@@ -26,6 +26,7 @@ export class ActionService {
             console.warn("Previous process still in progress. (skip)");
             return
         }
+
         this.processing = true;
         try {
             await this.process();
@@ -36,8 +37,8 @@ export class ActionService {
         }
 
         this.timeoutRef = setTimeout(
-            this.loop,
-            Math.max(60000, Math.min(...Object.values(this.inverterChecks)) - Date.now()),
+            this.loop.bind(this),
+            Math.max(60000, Math.min(Date.now(), ...Object.values(this.inverterChecks)) - Date.now()),
         );
     }
 
@@ -54,7 +55,7 @@ export class ActionService {
 
         for (const inverter of inverters) {
             try {
-                console.log(`[${new Date().toISOString()}] Perform actions on ${inverter.name}`);
+                console.log(`[${new Date().toISOString()}] Perform actions on '${inverter.name}'`);
                 await inverter.connect(async (inv) => {
                     if ((await inv.getStatus()) !== Status.OK) {
                         // TODO: Add error message to the inverter to allow the user to know why no action was done.
@@ -184,13 +185,6 @@ export class ActionService {
     }
 
     private async performActions(inverter: InverterChild, actions: Actions): Promise<void> {
-        for (const [action, actionValue] of Object.entries(actions.actions)) {
-            switch (action.toLowerCase()) {
-                case "charge":
-                    await inverter.chargeBattery(actionValue[1]);
-                default:
-                    console.log(`[${new Date().toISOString()}] Unknown action '${action}' for inverter '${inverter.name}'`);
-            }
-        }
+        await inverter.chargeBattery(actions.actions["charge"][1]);
     }
 }

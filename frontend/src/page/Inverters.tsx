@@ -1,26 +1,26 @@
-import { createSignal, For, Show, type Component } from "solid-js";
-import { Stack } from "src/components/stack";
-import { Direction } from "src/types/Direction";
-import { type DialogControls } from "src/components/dialog";
-import { NavButton } from "src/components/navButton";
-import { Panel } from "src/components/panel";
-import { validateFetchMany } from "src/actions/validateFetch";
-import { InverterInfoShortValidator } from "src/models/InverterInfoShort";
-import { Status } from "src/types/Status";
-import { CreateInverterDialog } from "src/components/dialog/CreateInverterDialog";
+import { For, Show, type Component } from "solid-js";
+import { Stack } from "../components/stack";
+import { Direction } from "../types/Direction";
+import { NavButton } from "../components/navButton";
+import { Panel } from "../components/panel";
+import { validateFetchOne } from "../actions/validateFetch";
+import { InverterInfoShortValidator } from "../models/InverterInfoShort";
+import { Status } from "../types/Status";
+import { CreateInverterDialog } from "../components/dialog/CreateInverterDialog";
+import { useModalController } from "../hooks/UseModalControls.js";
 
 export const InvertersPage: Component = () => {
-    const [inverters] = validateFetchMany("/api/inverter", InverterInfoShortValidator);
-    const [dialogControls, setDialogControls] = createSignal<DialogControls | undefined>();
+    const [inverters, { refetch }] = validateFetchOne("/api/inverter", InverterInfoShortValidator);
+    const modalController = useModalController();
 
     return <>
         <Stack direction={Direction.Vertical} gap="1em" padding="1em">
             <Stack direction={Direction.Horizontal}>
-                <button onClick={dialogControls()?.showDialog}>Add Inverter</button>
+                <button onClick={modalController.showModal}>Add Inverter</button>
             </Stack>
             <Stack direction={Direction.Vertical} gap="0.25em">
                 <Show when={inverters.state === "ready"}>
-                    <For each={inverters.latest ?? []}>
+                    <For each={inverters.latest?.inverters ?? []}>
                         {(item, index) => <NavButton href={`/inverter/${item.id}`}>
                             <Panel color={item.status}>
                                 <Stack direction={Direction.Horizontal} gap="0.5em">
@@ -35,6 +35,6 @@ export const InvertersPage: Component = () => {
                 </Show>
             </Stack>
         </Stack>
-        <CreateInverterDialog controls={setDialogControls}/>
+        <CreateInverterDialog controller={modalController} onSuccess={() => refetch()}/>
     </>
 }

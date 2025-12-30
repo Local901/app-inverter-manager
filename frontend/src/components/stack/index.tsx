@@ -1,5 +1,5 @@
 
-import { Direction } from "src/types/Direction";
+import { Direction } from "../../types/Direction";
 import { JSX, ParentComponent } from "solid-js";
 
 const directionStyles: Record<Direction, [JSX.CSSProperties["flex-direction"], string]> = {

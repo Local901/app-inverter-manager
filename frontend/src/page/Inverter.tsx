@@ -1,19 +1,17 @@
 import { useParams } from "@solidjs/router";
-import { createSignal, Show, type Component } from "solid-js";
-import { validateFetchOne } from "src/actions/validateFetch";
-import type { DialogControls } from "src/components/dialog";
-import { CreateActionDialog } from "src/components/dialog/CreateActionDialog";
-import { InverterNavBar } from "src/components/navbar";
-import { Stack } from "src/components/stack";
-import { Schedule } from "src/elements/schedule";
-import { InverterInfoValidator } from "src/models/InverterInfo";
-import { Direction } from "src/types/Direction";
+import { Show, type Component } from "solid-js";
+import { validateFetchOne } from "../actions/validateFetch";
+import { InverterNavBar } from "../components/navbar";
+import { Stack } from "../components/stack";
+import { InverterInfoValidator } from "../models/InverterInfo";
+import { Direction } from "../types/Direction";
+import { useModalController } from "../hooks/UseModalControls.js";
 
 export const InverterPage: Component = () => {
     const params = useParams<{ id: string }>();
     const id = params.id;
     
-    const [dialogControls, setDialogControls] = createSignal<DialogControls | undefined>();
+    const modalController = useModalController();
 
     const [inverter] = validateFetchOne(`/api/inverter/${id}`, InverterInfoValidator);
 
@@ -24,9 +22,7 @@ export const InverterPage: Component = () => {
                 <img src={`/img/inverter/${inverter.latest?.type}.ico`} style={{ margin: "-0.25em 0", height: "1.5em", "padding-right": "0.5em" }}/>
                 {inverter.latest!.name}
             </h3>
-            <button onClick={() => dialogControls()?.showDialog()}>Create action</button>
-            <Schedule inverterId={id}/>
+            <button onClick={() => modalController.showModal()}>Create action</button>
         </Stack>
-        <CreateActionDialog inverterId={id} controls={setDialogControls}/>
     </Show>
 };

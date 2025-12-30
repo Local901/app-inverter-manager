@@ -1,17 +1,17 @@
-import { Column, Entity, JoinColumn, ManyToOne, Unique, type Relation } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, Unique, type Relation } from "typeorm";
 import { Inverter } from "./Inverter.js";
 import { Schedule } from "./Schedule.js";
 
 @Unique(["inverterId", "scheduleId", "order"])
 @Entity()
 export class InverterSchedule {
-    @Column("int")
+    @PrimaryColumn("int")
     public readonly inverterId!: number;
 
-    @Column("int")
+    @PrimaryColumn("int")
     public readonly scheduleId!: number;
 
-    @Column("int")
+    @PrimaryColumn("int")
     public order!: number;
 
     @ManyToOne(() => Inverter, (inverter) => inverter.scheduleRelations, {

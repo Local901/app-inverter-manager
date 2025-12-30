@@ -1,34 +1,34 @@
-import { createSignal, type ParentComponent } from "solid-js";
+import { createEffect, createSignal, type ParentComponent } from "solid-js";
 import styles from "./index.module.css";
-
-export type DialogControls = {
-    showDialog: () => void;
-    close: () => void;
-};
+import type { ModalController } from "../../hooks/UseModalControls.js";
 
 export interface DialogProps {
     open?: boolean;
     onClose?: () => void;
-    controls?: (controls: DialogControls) => void;
+    controller?: ModalController;
     closedBy?: "any" | "closerequest" | "none"
 }
 
 export const Dialog: ParentComponent<DialogProps> = (props) => {
     const [dialog, setDialog] = createSignal<HTMLDialogElement | undefined>();
 
-    if (props.controls) {
-        props.controls({
-            showDialog: () => dialog()?.showModal(),
-            close: () => dialog()?.close(),
+    createEffect(() => {
+        const element = dialog();
+        if (!props.controller || !element) {
+            return;
+        }
+        return props.controller.mountControls({
+            showModal: element.showModal.bind(element),
+            show: element.show.bind(element),
+            close: element.close.bind(element),
         });
-    }
+    }, [dialog]);
 
     return <dialog
         ref={setDialog}
         class={`dialog ${styles.dialog}`}
         open={props.open}
         onClose={(props.onClose)}
-        // @ts-expect-error Not supported by all browsers
         closedby={props.closedBy ?? "any"}
         style={{
             top: "50%",

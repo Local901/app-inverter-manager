@@ -105,6 +105,15 @@ paths:
                   dischargeRate:
                     type: number
                     description: The rate at which the battery can be discharged.
+                  schedules:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
     delete:
       summary: Remove an inverter.
       tags:

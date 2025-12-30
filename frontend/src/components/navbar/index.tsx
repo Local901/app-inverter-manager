@@ -1,4 +1,4 @@
-import { Direction } from "src/types/Direction";
+import { Direction } from "../../types/Direction";
 import { Stack } from "../stack";
 import { Component } from "solid-js";
 import { NavButton } from "../navButton";
@@ -6,8 +6,9 @@ import { NavButton } from "../navButton";
 export const NavBar: Component = () => {
     return <nav class="navbar">
         <Stack direction={Direction.Horizontal}>
-            <NavButton href="/">Home</NavButton>
+            {/* <NavButton href="/">Home</NavButton> */}
             <NavButton href="/inverter">Inverter</NavButton>
+            <NavButton href="/schedule">Schedule</NavButton>
             <div style={{ "flex-grow": 1 }}/>
         </Stack>
     </nav>

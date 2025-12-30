@@ -10,7 +10,7 @@ export const ItemRangeData: Record<ScheduleType, { before: number, range: number
     [ScheduleType.DAY]: {
         range: 24 * 60 * 60,
         before: 3600,
-        isDiscreet: true,
+        isDiscreet: false,
     }
 }
 
