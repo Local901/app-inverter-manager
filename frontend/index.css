@@ -150,6 +150,11 @@ fieldset > legend, .fieldset > legend {
   box-shadow: 0 0 0.5em 0.05em var(--foreground);
 }
 
+table th {
+  padding: 0 0.25em;
+  border-right: 2px solid rgb(146, 146, 146);
+}
+
 dialog {
   width: calc(min(calc(750px + 5vw), 100vw) - 5vw)
 }

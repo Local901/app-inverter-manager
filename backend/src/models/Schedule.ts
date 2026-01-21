@@ -18,6 +18,7 @@ export interface ScheduleJson {
     id: string,
     name: string,
     type: ScheduleType,
+    timeZone: number,
     time_slots: Array<{
         slot: number,
         actions: Record<string, string>,
@@ -35,6 +36,10 @@ export class Schedule {
     @Column("enum", { enum: ScheduleType })
     public type!: ScheduleType;
 
+    /** Number of seconds offset for the timezone. */
+    @Column("int", { default: 0 })
+    public timeZone!: number;
+
     @OneToMany(() => InverterSchedule, (inverterSchedule) => inverterSchedule.schedule)
     public inverterRelations?: Relation<InverterSchedule>[];
 
@@ -46,22 +51,24 @@ export class Schedule {
             record[item.startAt] ??= [];
             record[item.startAt].push([item.action, `${item.value}`]);
             return record;
-        }, {})
+        }, {});
 
         return {
             id: `${this.id}`,
             name: this.name,
             type: this.type,
+            timeZone: this.timeZone,
             time_slots: Object.entries(actionRecord).map(([slot, values]) => ({
                 slot: Number.parseInt(slot),
                 actions: Object.fromEntries(values),
             })),
-        }
+        };
     }
 
     public getNow(): number {
         const rangeData = ItemRangeData[this.type];
-        return Math.round(Date.now() / 1000) % rangeData.range;
+        // Get now in range of the schedule offset by the time zone.
+        return (Math.round(Date.now() / 1000) + this.timeZone) % rangeData.range;
     }
 
     public getItemRange(): [number, number] {

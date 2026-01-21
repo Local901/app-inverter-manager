@@ -19,6 +19,9 @@ export const InvertersPage: Component = () => {
                 <button onClick={modalController.showModal}>Add Inverter</button>
             </Stack>
             <Stack direction={Direction.Vertical} gap="0.25em">
+                <Show when={inverters.state === "pending"}>
+                    Loading...
+                </Show>
                 <Show when={inverters.state === "ready"}>
                     <For each={inverters.latest?.inverters ?? []}>
                         {(item, index) => <NavButton href={`/inverter/${item.id}`}>

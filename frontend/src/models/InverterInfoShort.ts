@@ -14,5 +14,5 @@ export const InverterInfoShortValidator = v.object({
         name: v.string(),
         type: v.string(),
         status: v.enum(Status),
-    }, { additionalProperties: true }))
+    }))
 });

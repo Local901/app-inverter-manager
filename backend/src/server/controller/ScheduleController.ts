@@ -12,6 +12,10 @@ const scheduleBodyValidator = v.object({
     type: v.enum(ScheduleType),
 });
 
+const updateScheduleValidator = v.object({
+    timeZone: v.int(),
+});
+
 const timeSlotBodyValidator = v.object({
     action: v.string(),
     value: v.string({ regex: /^\d+$/ }),
@@ -40,14 +44,12 @@ export class ScheduleController implements Controller {
 
     public createSchedule(): RequestHandler {
         return JsonEndpoint(async (req) => {
-            const validationResult = scheduleBodyValidator.validateReturn(req.body);
-            if (!scheduleBodyValidator.validateResult(req.body, validationResult)) {
-                throw validationResult;
-            }
+            const { body } = req;
+            v.validateOrThrow(scheduleBodyValidator, body);
 
             const schedule = this.manager.create(Schedule, {
-                name: req.body.name,
-                type: req.body.type,
+                name: body.name,
+                type: body.type,
             });
             this.manager.save(schedule);
 
@@ -67,7 +69,6 @@ export class ScheduleController implements Controller {
             const schedule = await this.manager.findOne(Schedule, {
                 where: { id },
                 relations: {
-                    // inverterRelations: true,
                     items: true,
                 },
             });
@@ -76,6 +77,20 @@ export class ScheduleController implements Controller {
             }
 
             return schedule.toJson();
+        });
+    }
+
+    public updateSchedule(): RequestHandler {
+        return JsonEndpoint<{ id: string }>(async (req) => {
+            const id = Number.parseInt(req.params.id);
+            if (isNaN(id)) {
+                throw new NotFound();
+            }
+
+            const { body } = req;
+            v.validateOrThrow(updateScheduleValidator, body);
+
+            await this.manager.update(Schedule, { id }, { timeZone: body.timeZone });
         });
     }
 
@@ -117,12 +132,11 @@ export class ScheduleController implements Controller {
             if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }
-            const validationResult = timeSlotBodyValidator.validateReturn(req.body);
-            if (!timeSlotBodyValidator.validateResult(req.body, validationResult)) {
-                throw validationResult;
-            }
 
-            const { action, value: valueString } = req.body;
+            const { body } = req;
+            v.validateOrThrow(timeSlotBodyValidator, body);
+
+            const { action, value: valueString } = body;
             const value = Number.parseInt(valueString);
 
             const item = await this.manager.findOneBy(ScheduleItem, {
@@ -153,15 +167,14 @@ export class ScheduleController implements Controller {
             if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }
-            const validationResult = deleteTimeSlotBodyValidator.validateReturn(req.body);
-            if (!deleteTimeSlotBodyValidator.validateResult(req.body, validationResult)) {
-                throw validationResult;
-            }
+            
+            const { body } = req;
+            v.validateOrThrow(deleteTimeSlotBodyValidator, body);
 
             await this.manager.delete(ScheduleItem, {
                 scheduleId: id,
                 startAt: timeSlot,
-                action: req.body.action,
+                action: body.action,
             });
         });
     }

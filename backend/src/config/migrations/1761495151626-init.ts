@@ -40,6 +40,10 @@ export class Init1761495151626 implements MigrationInterface {
                 name: "type",
                 type: "enum",
                 enum: ["DAY"],
+            }, {
+                name: "time_zone",
+                type: "int",
+                default: 0,
             }],
         }));
 

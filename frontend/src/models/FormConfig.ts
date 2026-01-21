@@ -36,4 +36,4 @@ export const FormConfigValidator = v.array<FormConfig>(v.object({
     min: v.optional(v.number()),
     max: v.optional(v.number()),
     regex: v.optional(v.string()),
-}, { additionalProperties: true }));
+}));

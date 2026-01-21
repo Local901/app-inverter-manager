@@ -1,5 +1,6 @@
 import { Status } from "../types/Status";
 import { v } from "@local901/validator";
+import { ScheduleInfo } from "./Schedule.js";
 
 export interface InverterInfo {
     id: number;
@@ -21,8 +22,5 @@ export const InverterInfoValidator = v.object<InverterInfo>({
     status: v.enum(Status),
     chargeRate: v.int(),
     dischargeRate: v.int(),
-    schedules: v.array(v.object({
-        id: v.string(),
-        name: v.string()
-    }, { additionalProperties: true })),
-}, { additionalProperties: true });
+    schedules: v.array(ScheduleInfo),
+});

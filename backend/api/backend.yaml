@@ -108,12 +108,7 @@ paths:
                   schedules:
                     type: array
                     items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        name:
-                          type: string
+                      $ref: "#/components/schemas/ScheduleRelationType"
     delete:
       summary: Remove an inverter.
       tags:
@@ -128,6 +123,51 @@ paths:
       responses:
         200:
           description: The inverter was removed.
+  /api/inverter/{id}/schedules:
+    get:
+      summary: Get list of schedules with decreasing priority
+      tags:
+        - inverter
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Inverter id.
+      responses:
+        200:
+          description: List of schedules found. (May be empty)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduleRelationType"
+    put:
+      summary: Update schedule list related to the inverter.
+      tags:
+        - inverter
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: List of schedule ids.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        201:
+          description: List of schedules was updated.
+        500:
+          description: Failed to save new list of schedules.
+      
   /api/inverter/{id}/settings:
     get:
       summary: Get setting of an inverter.
@@ -305,6 +345,8 @@ paths:
                     type: string
                   type:
                     $ref: "#/components/schemas/ScheduleType"
+                  timeZone:
+                    type: number
                   time_slots:
                     type: array
                     items:
@@ -318,6 +360,29 @@ paths:
                             type: string
         404:
           description: Not schedule found.
+    put:
+      summary: Update schedule data.
+      tags:
+        - schedule
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: Schedule id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                timeZone:
+                  type: number
+      responses:
+        200:
+          description: Schedule is updated.
     delete:
       summary: Delete the schedules.
       tags:
@@ -463,3 +528,13 @@ components:
       type: string
       enum:
         - DAY
+    ScheduleRelationType:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+

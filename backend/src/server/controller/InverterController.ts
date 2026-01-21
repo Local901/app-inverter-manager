@@ -9,14 +9,17 @@ import { Inverter } from "../../models/Inverter.js";
 import type { EntityManager } from "typeorm";
 import { parseSettings } from "../../utilities/Settings.js";
 import { Schedule } from "../../models/Schedule.js";
+import { InverterSchedule } from "../../models/InverterSchedule.js";
 
-const settingsValidator = v.record(v.string());
+const settingsValidator = v.record<Record<string, string>>(v.string());
 
 const createInverterBodyValidator = v.object({
     name: v.string(),
     type: v.string<InverterType>({ enum: InverterType }),
     settings: settingsValidator,
 });
+
+const inverterScheduleUpdateValidator = v.array(v.string({ regex: /\d+/ }));
 
 export class InverterController implements Controller {
     public constructor(private readonly manager: EntityManager) {
@@ -42,11 +45,7 @@ export class InverterController implements Controller {
     private createInverter(): RequestHandler {
         return JsonEndpoint(async (req) => {
             const { body } = req;
-
-            const error = createInverterBodyValidator.validateReturn(body);
-            if (!createInverterBodyValidator.validateResult(body, error)) {
-                throw error;
-            }
+            v.validateOrThrow(createInverterBodyValidator, body);
 
             const info = getInverterInfo(body.type);
 
@@ -77,6 +76,21 @@ export class InverterController implements Controller {
         });
     }
 
+    private async getSchedules(inverterId: number): Promise<Schedule[]> {
+        return this.manager.find(Schedule, {
+            where: {
+                inverterRelations: {
+                    inverterId,
+                },
+            },
+            order: {
+                inverterRelations: {
+                    order: "ASC",
+                },
+            },
+        });
+    }
+
     private getInverterInfo(): RequestHandler {
         return JsonEndpoint<{ id: string }>(async (req) => {
             const id = Number.parseInt(req.params.id);
@@ -90,24 +104,14 @@ export class InverterController implements Controller {
             }
 
             const info = await inverter.connect((i) => i.toInfo());
-            const schedules = await this.manager.find(Schedule, {
-                where: {
-                    inverterRelations: {
-                        inverterId: inverter.id,
-                    },
-                },
-                order: {
-                    inverterRelations: {
-                        order: "ASC",
-                    },
-                },
-            });
+            const schedules = await this.getSchedules(inverter.id);
 
             return {
                 ...info,
                 schedules: schedules.map((s) => ({
                     id: `${s.id}`,
                     name: s.name,
+                    type: s.type,
                 })),
             }
         });
@@ -121,6 +125,45 @@ export class InverterController implements Controller {
             }
 
             await this.manager.delete(Inverter, { id });
+        });
+    }
+
+    private getInverterSchedules(): RequestHandler {
+        return JsonEndpoint<{ id: string }>(async (req) => {
+            const id = Number.parseInt(req.params.id);
+            if (isNaN(id)) {
+                return [];
+            }
+            const schedules = await this.getSchedules(id);
+            return schedules.map((s) => ({
+                id: `${s.id}`,
+                name: s.name,
+                type: s.type,
+            }));
+        });
+    }
+
+    private updateInverterSchedules(): RequestHandler {
+        return JsonEndpoint<{ id: string }>(async (req) => {
+            const id = Number.parseInt(req.params.id);
+            if (isNaN(id)) {
+                throw new NotFound();
+            }
+
+            const { body } = req;
+            v.validateOrThrow(inverterScheduleUpdateValidator, body)
+
+            const ids = body.map((v) => Number.parseInt(v));
+
+            await this.manager.transaction(async (m) => {
+                await m.delete(InverterSchedule, { inverterId: id });
+                const newRelations = ids.map((scheduleId, index) => m.create(InverterSchedule, {
+                    inverterId: id,
+                    scheduleId,
+                    order: index,
+                }));
+                await m.save(newRelations);
+            });
         });
     }
 
@@ -148,10 +191,7 @@ export class InverterController implements Controller {
             }
 
             const { body } = req;
-            const error = settingsValidator.validateReturn(body);
-            if (!settingsValidator.validateResult(body, error)) {
-                throw error;
-            }
+            v.validateOrThrow(settingsValidator, body);
 
             const inverter = await this.manager.findOneBy(Inverter, { id });
             if (!inverter) {
@@ -168,7 +208,10 @@ export class InverterController implements Controller {
                 body as Record<string, string>,
             );
 
-            await this.manager.save(this.manager.merge(Inverter, inverter, { options: newOptions }));
+            await this.manager.save(this.manager.merge(Inverter, inverter, {
+                name: body["$/name"],
+                options: newOptions,
+            }));
         });
     }
 
@@ -181,6 +224,8 @@ export class InverterController implements Controller {
         invRouter.get("/type/:type", this.getTypeSettings());
         invRouter.get("/:id", this.getInverterInfo());
         invRouter.delete("/:id", this.deleteInverter());
+        invRouter.get("/:id/schedules", this.getInverterSchedules());
+        invRouter.put("/:id/schedules", this.updateInverterSchedules());
         invRouter.get("/:id/settings", this.getInverterSettings());
         invRouter.post("/:id/settings", this.updateInverterSettings());
 

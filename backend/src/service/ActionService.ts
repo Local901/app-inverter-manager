@@ -38,7 +38,13 @@ export class ActionService {
 
         this.timeoutRef = setTimeout(
             this.loop.bind(this),
-            Math.max(60000, Math.min(Date.now(), ...Object.values(this.inverterChecks)) - Date.now()),
+            Math.max(
+                60000,
+                Math.min(
+                    Date.now() + (15 * 60 * 1000),
+                    ...Object.values(this.inverterChecks),
+                ) - Date.now(),
+            ),
         );
     }
 

@@ -9,7 +9,7 @@ import { NavButton } from "../components/navButton/index.jsx";
 import { Panel } from "../components/panel/index.jsx";
 import { Status } from "../types/Status.js";
 
-export const SchedulePage: Component = () => {
+export const SchedulesPage: Component = () => {
     const [schedules, { refetch }] = validateFetchOne("/api/schedule", SchedulesList);
     const modalController = useModalController();
 
@@ -19,6 +19,9 @@ export const SchedulePage: Component = () => {
                 <button onClick={modalController.showModal}>Add Schedule</button>
             </Stack>
             <Stack direction={Direction.Vertical} gap="0.25em">
+                <Show when={schedules.state === "pending"}>
+                    Loading...
+                </Show>
                 <Show when={schedules.state === "ready"}>
                     <For each={schedules.latest?.schedules ?? []}>
                         {(schedule) => <NavButton href={`/schedule/${schedule.id}`}>
