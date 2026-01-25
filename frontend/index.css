@@ -88,7 +88,7 @@ body {
   margin: 0;
 }
 
-a {
+a.nav-button {
   color: inherit;
   text-decoration: none;
 }
@@ -150,9 +150,15 @@ fieldset > legend, .fieldset > legend {
   box-shadow: 0 0 0.5em 0.05em var(--foreground);
 }
 
-table th {
-  padding: 0 0.25em;
-  border-right: 2px solid rgb(146, 146, 146);
+table {
+  border-collapse: collapse;
+}
+table, th, td {
+  padding: 0.25em 0.25em;
+  border: 1px solid var(--foreground);
+}
+th, td {
+  align-items: center;
 }
 
 dialog {
@@ -176,28 +182,35 @@ dialog {
   background-color: var(--color, buttonface);
 }
 
-.schedule {
-  padding-top: 1.5em;
+/* table headers follow */
+.ui-table {
+  position: relative;
+  height: max-content;
+  max-height: 80vh;
+  overflow: auto;
 }
-.schedule table {
-  border: none;
+.ui-table table {
+  padding: 0;
   border-collapse: separate;
   border-spacing: 0;
   table-layout: fixed;
-  text-align: left;
 }
-.schedule table thead {
+.ui-table table thead {
   position: sticky;
   top: 0;
-  z-index: 1;
-  background-color: var(--background-primary);
-}
-.schedule table thead th:first-child, .schedule table tbody th:first-child {
-  position: sticky;
-  left: 0;
   z-index: 2;
   background-color: var(--background-primary);
 }
+.ui-table table thead th:first-child, table tbody th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background-color: var(--background-primary);
+}
+/* .schedule {
+  padding-top: 1.5em;
+}
+.schedule 
 .schedule .header {
   min-width: 8em;
   padding: 0.25em;
@@ -220,7 +233,7 @@ dialog {
 .schedule tbody .nowLine {
   box-sizing: content-box;
   border: 2px solid red;
-}
+} */
 /* .clearfix::after {
   content: "";
   clear: both;

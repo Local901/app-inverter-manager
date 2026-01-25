@@ -13,7 +13,7 @@ const scheduleBodyValidator = v.object({
 });
 
 const updateScheduleValidator = v.object({
-    timeZone: v.int(),
+    time_zone: v.int(),
 });
 
 const timeSlotBodyValidator = v.object({
@@ -90,7 +90,7 @@ export class ScheduleController implements Controller {
             const { body } = req;
             v.validateOrThrow(updateScheduleValidator, body);
 
-            await this.manager.update(Schedule, { id }, { timeZone: body.timeZone });
+            await this.manager.update(Schedule, { id }, { timeZone: body.time_zone });
         });
     }
 

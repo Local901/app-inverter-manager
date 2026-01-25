@@ -18,7 +18,7 @@
     "vite-plugin-top-level-await": "^1.6.0"
   },
   "dependencies": {
-    "@local901/validator": "^0.4.1",
+    "@local901/validator": "^0.4.3",
     "@solidjs/router": "^0.15.4",
     "solid-js": "^1.9.10"
   }

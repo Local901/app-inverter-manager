@@ -43,6 +43,14 @@ export class HttpServer {
     private route(app: Express) {
         // public files
         app.use(express.static(config.publicFilesPath));
+        app.use("/", (req, res, next) => {
+            next()
+            console.log(JSON.stringify({
+                method: req.method,
+                path: req.originalUrl,
+                status: res.statusCode,
+            }));
+        })
 
         const apiRoute = Router();
         for (const controller of this.controllers) {

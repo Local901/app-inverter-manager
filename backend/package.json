@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@local901/env": "^0.0.3",
-    "@local901/validator": "^0.4.1",
+    "@local901/validator": "^0.4.3",
     "express": "^5.1.0",
     "modbus-serial": "^8.0.23",
     "mysql2": "^3.15.3",

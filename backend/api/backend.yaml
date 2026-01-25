@@ -345,7 +345,7 @@ paths:
                     type: string
                   type:
                     $ref: "#/components/schemas/ScheduleType"
-                  timeZone:
+                  time_zone:
                     type: number
                   time_slots:
                     type: array
@@ -378,7 +378,7 @@ paths:
             schema:
               type: object
               properties:
-                timeZone:
+                time_zone:
                   type: number
       responses:
         200:

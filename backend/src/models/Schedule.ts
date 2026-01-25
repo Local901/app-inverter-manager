@@ -18,7 +18,7 @@ export interface ScheduleJson {
     id: string,
     name: string,
     type: ScheduleType,
-    timeZone: number,
+    time_zone: number,
     time_slots: Array<{
         slot: number,
         actions: Record<string, string>,
@@ -57,7 +57,7 @@ export class Schedule {
             id: `${this.id}`,
             name: this.name,
             type: this.type,
-            timeZone: this.timeZone,
+            time_zone: this.timeZone,
             time_slots: Object.entries(actionRecord).map(([slot, values]) => ({
                 slot: Number.parseInt(slot),
                 actions: Object.fromEntries(values),

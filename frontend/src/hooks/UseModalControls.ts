@@ -10,24 +10,34 @@ export interface ModalController extends ModalControls {
     mountControls: (controls: ModalControls) => () => void;
 }
 
+function tryEach<T>(list: T[], callback: (value: T) => unknown): void {
+    for (const v of list) {
+        try {
+            callback(v);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+}
+
 export function useModalController(): ModalController {
     const [ref] = createSignal<ModalControls[]>([]);
 
     return {
         showModal() {
-            for (const c of ref()) {
+            tryEach(ref(), (c) => {
                 c.showModal();
-            }
+            });
         },
         show() {
-            for (const c of ref()) {
+            tryEach(ref(), (c) => {
                 c.show();
-            }
+            });
         },
         close() {
-            for (const c of ref()) {
+            tryEach(ref(), (c) => {
                 c.close();
-            }
+            });
         },
         mountControls(controls: ModalControls): () => void {
             ref().push(controls);

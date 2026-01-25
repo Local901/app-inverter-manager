@@ -6,7 +6,6 @@ import { Stack } from "../components/stack";
 import { InverterInfoValidator } from "../models/InverterInfo";
 import { Direction } from "../types/Direction";
 import { useModalController } from "../hooks/UseModalControls.js";
-import { NavButton } from "../components/navButton/index.jsx";
 import { FieldSet } from "../components/fieldSet/index.jsx";
 import { ManageInverterSchedulesDialog } from "../components/dialog/ManageInverterSchedulesDialog.jsx";
 
@@ -39,7 +38,7 @@ export const InverterPage: Component = () => {
                     <tbody>
                         <For each={inverter.latest?.schedules ?? []}>
                             {(schedule) => <tr>
-                                <NavButton href={`/schedule/${schedule.id}`}>{schedule.name}</NavButton>
+                                <td><a href={`/schedule/${schedule.id}`}>{schedule.name}</a></td>
                             </tr>}
                         </For>
                     </tbody>
@@ -47,8 +46,6 @@ export const InverterPage: Component = () => {
             </FieldSet>
         </Stack>
         {inverter.error}
-        <ManageInverterSchedulesDialog controller={modalController} onClose={() => { refetch(); }}>
-
-        </ManageInverterSchedulesDialog>
+        <ManageInverterSchedulesDialog controller={modalController} onClose={() => { refetch(); }}/>
     </Show>
 };

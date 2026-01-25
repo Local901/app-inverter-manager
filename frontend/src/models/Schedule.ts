@@ -25,6 +25,6 @@ export const Schedule = v.object({
     id: v.string(),
     name: v.string(),
     type: v.string<typeof ScheduleTypes[number]>({ enum: ScheduleTypes }),
-    timeZone: v.number(),
+    time_zone: v.number(),
     time_slots: v.array(TimeSlot),
 });
