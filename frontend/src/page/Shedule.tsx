@@ -6,6 +6,8 @@ import { Stack } from "../components/stack/index.jsx";
 import { Direction } from "../types/Direction.js";
 import { TimeZone } from "../elements/timeZone/index.jsx";
 import { Table } from "../components/table/index.jsx";
+import { UpdateScheduleDialog } from "../components/dialog/UpdateScheduleDialog.jsx";
+import { useModalController } from "../hooks/UseModalControls.js";
 
 const actions = ["charge"];
 
@@ -13,13 +15,19 @@ export const SchedulePage: Component = () => {
     const params = useParams<{ id: string }>();
     const id = params.id;
 
+    const controller = useModalController();
+
     const [schedule, { refetch }] = validateFetchOne(`/api/schedule/${id}`, Schedule);
 
     return <>
         <Stack direction={Direction.Vertical} gap="1em" padding="1em">
-            <Show when={["ready", "refreshing"].includes(schedule.state)}>
-                <h2>{schedule.latest?.name} <TimeZone timeZone={schedule.latest?.time_zone ?? 0}/></h2>
-            </Show>
+            <Stack direction={Direction.Horizontal}>
+                <Show when={["ready", "refreshing"].includes(schedule.state)}>
+                    <h2>{schedule.latest?.name} <TimeZone timeZone={schedule.latest?.time_zone ?? 0}/></h2>
+                </Show>
+                <div style={{ "flex-grow": 1 }}></div>
+                <button title="settings" onClick={() => controller.showModal()}>⚙️</button>
+            </Stack>
             <Table>
                 <thead>
                     <tr>
@@ -46,5 +54,8 @@ export const SchedulePage: Component = () => {
                 </tbody>
             </Table>
         </Stack>
+        <Show when={schedule.latest}>
+            <UpdateScheduleDialog schedule={schedule.latest!} controller={controller}/>
+        </Show>
     </>
 }

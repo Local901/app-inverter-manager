@@ -3,6 +3,7 @@ export function sendJson(
     url: string,
     method: string,
     callback?: (response: Response) => Promise<void> | void,
+    mapper?: (key: string, value: FormDataEntryValue | null, formDate: FormData) => FormDataEntryValue | null,
 ): (data: FormData) => Promise<void> {
     return async (data) => {
         const body: Record<string, unknown> = {};
@@ -19,7 +20,11 @@ export function sendJson(
                 current = (current[section] ??= {}) as Record<string, unknown>;
             }
             const property = path.pop() as string; // The list is always one element long.
-            current[property] = data.get(key);
+            let value = data.get(key);
+            if (mapper) {
+                value = mapper(key, value, data);
+            }
+            current[property] = value;
         }
 
         const response = await fetch(url, {
