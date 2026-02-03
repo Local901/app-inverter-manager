@@ -3,7 +3,7 @@ export function sendJson(
     url: string,
     method: string,
     callback?: (response: Response) => Promise<void> | void,
-    mapper?: (key: string, value: FormDataEntryValue | null, formDate: FormData) => FormDataEntryValue | null,
+    mapper?: (key: string, value: FormDataEntryValue | null, formDate: FormData) => unknown,
 ): (data: FormData) => Promise<void> {
     return async (data) => {
         const body: Record<string, unknown> = {};
@@ -22,6 +22,7 @@ export function sendJson(
             const property = path.pop() as string; // The list is always one element long.
             let value = data.get(key);
             if (mapper) {
+                // @ts-expect-error Not correct type.
                 value = mapper(key, value, data);
             }
             current[property] = value;

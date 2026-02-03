@@ -5,7 +5,6 @@ import { Stack } from "../stack/index.jsx";
 import { Direction } from "../../types/Direction.js";
 import { Input } from "../../elements/input/index.jsx";
 import { sendJson } from "../../utilities/send.js";
-import PostButton from "../postButton/index.jsx";
 
 export const UpdateScheduleDialog: Component<DialogProps & {
     schedule: {
@@ -31,10 +30,10 @@ export const UpdateScheduleDialog: Component<DialogProps & {
                 }, (key, value, formData) => {
                     if (key === "time_zone" && typeof value === "string") {
                         // This is a time.
-                        return formData.get("time_zone_sign") + value.split(":")
-                            .map((i, index) => Number.parseInt(i) * Math.max(1, (2 - index) * 60))
+                        return Number.parseInt((formData.get("time_zone_sign") ?? "") + value.split(":")
+                            .map((i, index) => Number.parseInt(i) * Math.max(1, (1 - index) * 60))
                             .reduce((prev, next) => prev + next, 0)
-                            .toString();
+                            .toString());
                     }
                     if (key === "time_zone_sign") {
                         return undefined as unknown as null;
@@ -45,14 +44,14 @@ export const UpdateScheduleDialog: Component<DialogProps & {
                 <Stack direction={Direction.Vertical}>
                     <Stack direction={Direction.Horizontal}>
                         <label class="ui-input-label" for="time_zone" title="Time zone">Time zone</label>
-                        <select id="time_zone_sign">
-                            <option value="+" selected>+</option>
+                        <select id="time_zone_sign" name="time_zone_sign">
+                            <option value="" selected>+</option>
                             <option value="-">-</option>
                         </select>
                         <Input
                             type="time"
                             id="time_zone"
-                            name="timeZone"
+                            name="time_zone"
                             value={props.schedule.time_zone}
                             required
                         />

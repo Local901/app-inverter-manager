@@ -8,6 +8,8 @@ import { TimeZone } from "../elements/timeZone/index.jsx";
 import { Table } from "../components/table/index.jsx";
 import { UpdateScheduleDialog } from "../components/dialog/UpdateScheduleDialog.jsx";
 import { useModalController } from "../hooks/UseModalControls.js";
+import { ManageTimeslotDialog } from "../components/dialog/ManageTimeslotDialog.jsx";
+import type { TimeslotType } from "../models/TimeSlot.js";
 
 const actions = ["charge"];
 
@@ -16,8 +18,25 @@ export const SchedulePage: Component = () => {
     const id = params.id;
 
     const controller = useModalController();
+    const timeSlotController = useModalController();
+    const [timeslot, setTimeslot] = createSignal<null | number>(null);
+    const [timeslots, setTimeslots] = createSignal<Array<{ timeslot: number, type: TimeslotType | undefined }>>([])
 
     const [schedule, { refetch }] = validateFetchOne(`/api/schedule/${id}`, Schedule);
+
+    createEffect(() => {
+        if (!schedule.latest) {
+            return;
+        }
+        const list: Array<{ timeslot: number, type: TimeslotType | undefined }> = [];
+        for (const time of Array.apply(null, Array(24 * 4)).map((_v, i) => i * 15)) {
+            list.push({
+                timeslot: time,
+                type: schedule.latest?.time_slots.find((ts) => ts.slot === time)
+            });
+        }
+        setTimeslots(list);
+    });
 
     return <>
         <Stack direction={Direction.Vertical} gap="1em" padding="1em">
@@ -38,14 +57,16 @@ export const SchedulePage: Component = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    <For each={Array.apply(null, Array(24 * 4)).map((_v, i) => i * 15)}>
-                        {(timeslot) => {
-                            const timeActions = schedule.latest?.time_slots.find((ts) => ts.slot === timeslot);
-                            return <tr>
-                                <th>{`${Math.floor(timeslot / 60)}`.padStart(2, "0")}:{`${timeslot % 60}`.padStart(2, "0")}</th>
+                    <For each={timeslots()}>
+                        {(data) => {
+                            return <tr onClick={() => {
+                                    setTimeslot(data.timeslot);
+                                    timeSlotController.showModal();
+                                }}>
+                                <th>{`${Math.floor(data.timeslot / 60)}`.padStart(2, "0")}:{`${data.timeslot % 60}`.padStart(2, "0")}</th>
                                 <For each={actions}>
                                     {(action) => <td>
-                                        {timeActions?.actions[action] ?? ""}
+                                        {data.type?.actions[action] ?? ""}
                                     </td>}
                                 </For>
                             </tr>
@@ -55,7 +76,16 @@ export const SchedulePage: Component = () => {
             </Table>
         </Stack>
         <Show when={schedule.latest}>
-            <UpdateScheduleDialog schedule={schedule.latest!} controller={controller}/>
+            <UpdateScheduleDialog schedule={schedule.latest!} controller={controller} onSuccess={() => refetch()}/>
+        </Show>
+        <Show when={schedule.latest}>
+            <ManageTimeslotDialog
+                controller={timeSlotController} 
+                scheduleId={schedule.latest!.id} 
+                timeslot={timeslot()!} 
+                onClose={() => setTimeslot(null)}
+                onSuccess={() => refetch()}
+            />
         </Show>
     </>
 }

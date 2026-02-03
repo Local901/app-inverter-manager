@@ -90,7 +90,7 @@ export class ScheduleController implements Controller {
             const { body } = req;
             v.validateOrThrow(updateScheduleValidator, body);
 
-            await this.manager.update(Schedule, { id }, { timeZone: body.time_zone });
+            await this.manager.update(Schedule, { id }, { timeZone: body.time_zone * 60 });
         });
     }
 
@@ -108,7 +108,7 @@ export class ScheduleController implements Controller {
     public getTimeSlot(): RequestHandler {
         return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
             const id = Number.parseInt(req.params.id);
-            const timeSlot = Number.parseInt(req.params.timeSlot);
+            const timeSlot = Number.parseInt(req.params.timeSlot) * 60;
             if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }
@@ -128,7 +128,7 @@ export class ScheduleController implements Controller {
     public setTimeSlot(): RequestHandler {
         return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
             const id = Number.parseInt(req.params.id);
-            const timeSlot = Number.parseInt(req.params.timeSlot);
+            const timeSlot = Number.parseInt(req.params.timeSlot) * 60;
             if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }
@@ -163,7 +163,7 @@ export class ScheduleController implements Controller {
     public deleteTimeSlot(): RequestHandler {
         return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
             const id = Number.parseInt(req.params.id);
-            const timeSlot = Number.parseInt(req.params.timeSlot);
+            const timeSlot = Number.parseInt(req.params.timeSlot) * 60;
             if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }
@@ -185,6 +185,7 @@ export class ScheduleController implements Controller {
         scheduleRouter.get("/", this.getSchedules());
         scheduleRouter.post("/", this.createSchedule());
         scheduleRouter.get("/:id", this.getSchedule());
+        scheduleRouter.put("/:id", this.updateSchedule());
         scheduleRouter.delete("/:id", this.deleteSchedule());
         scheduleRouter.get("/:id/:timeSlot", this.getTimeSlot());
         scheduleRouter.post("/:id/:timeSlot", this.setTimeSlot());
