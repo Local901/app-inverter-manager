@@ -90,7 +90,7 @@ export class ScheduleController implements Controller {
             const { body } = req;
             v.validateOrThrow(updateScheduleValidator, body);
 
-            await this.manager.update(Schedule, { id }, { timeZone: body.time_zone * 60 });
+            await this.manager.update(Schedule, { id }, { timeZone: body.time_zone });
         });
     }
 
@@ -108,7 +108,7 @@ export class ScheduleController implements Controller {
     public getTimeSlot(): RequestHandler {
         return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
             const id = Number.parseInt(req.params.id);
-            const timeSlot = Number.parseInt(req.params.timeSlot) * 60;
+            const timeSlot = Number.parseInt(req.params.timeSlot);
             if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }
@@ -128,7 +128,7 @@ export class ScheduleController implements Controller {
     public setTimeSlot(): RequestHandler {
         return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
             const id = Number.parseInt(req.params.id);
-            const timeSlot = Number.parseInt(req.params.timeSlot) * 60;
+            const timeSlot = Number.parseInt(req.params.timeSlot);
             if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }
@@ -163,7 +163,7 @@ export class ScheduleController implements Controller {
     public deleteTimeSlot(): RequestHandler {
         return JsonEndpoint<{ id: string, timeSlot: string }>(async (req) => {
             const id = Number.parseInt(req.params.id);
-            const timeSlot = Number.parseInt(req.params.timeSlot) * 60;
+            const timeSlot = Number.parseInt(req.params.timeSlot);
             if (isNaN(id) || isNaN(timeSlot)) {
                 throw new NotFound();
             }

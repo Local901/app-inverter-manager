@@ -207,6 +207,14 @@ dialog {
   z-index: 1;
   background-color: var(--background-primary);
 }
+
+tr.m_0 {
+  background-color: gray;
+}
+.ui-table.schedule tbody tr:hover {
+  background-color: lightgray;
+  zoom: 1.5
+}
 /* .schedule {
   padding-top: 1.5em;
 }

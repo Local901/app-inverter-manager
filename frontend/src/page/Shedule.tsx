@@ -10,6 +10,7 @@ import { UpdateScheduleDialog } from "../components/dialog/UpdateScheduleDialog.
 import { useModalController } from "../hooks/UseModalControls.js";
 import { ManageTimeslotDialog } from "../components/dialog/ManageTimeslotDialog.jsx";
 import type { TimeslotType } from "../models/TimeSlot.js";
+import { Input } from "../elements/input/index.jsx";
 
 const actions = ["charge"];
 
@@ -20,7 +21,8 @@ export const SchedulePage: Component = () => {
     const controller = useModalController();
     const timeSlotController = useModalController();
     const [timeslot, setTimeslot] = createSignal<null | number>(null);
-    const [timeslots, setTimeslots] = createSignal<Array<{ timeslot: number, type: TimeslotType | undefined }>>([])
+    const [timeslots, setTimeslots] = createSignal<Array<{ timeslot: number, type: TimeslotType | undefined }>>([]);
+    const [showQuarters, setShowQuarters] = createSignal(true);
 
     const [schedule, { refetch }] = validateFetchOne(`/api/schedule/${id}`, Schedule);
 
@@ -29,7 +31,7 @@ export const SchedulePage: Component = () => {
             return;
         }
         const list: Array<{ timeslot: number, type: TimeslotType | undefined }> = [];
-        for (const time of Array.apply(null, Array(24 * 4)).map((_v, i) => i * 15)) {
+        for (const time of Array.apply(null, Array(24 * (showQuarters() ? 4 : 1))).map((_v, i) => i * 900 * (showQuarters() ? 1 : 4))) {
             list.push({
                 timeslot: time,
                 type: schedule.latest?.time_slots.find((ts) => ts.slot === time)
@@ -47,7 +49,17 @@ export const SchedulePage: Component = () => {
                 <div style={{ "flex-grow": 1 }}></div>
                 <button title="settings" onClick={() => controller.showModal()}>⚙️</button>
             </Stack>
-            <Table>
+            <div class="ui-input">
+                <label class="ui-input-label" for="showQuarters" title="Show only hours">Show only hours </label>
+                <input
+                    class="ui-input-control"
+                    id="showQuarters"
+                    type="checkbox"
+                    value={`${showQuarters()}`}
+                    onChange={(event) => { console.log(event.target.value, typeof event.target.value); setShowQuarters(!showQuarters())}}
+                />
+            </div>
+            <Table class="schedule">
                 <thead>
                     <tr>
                         <th>Time</th>
@@ -59,11 +71,11 @@ export const SchedulePage: Component = () => {
                 <tbody>
                     <For each={timeslots()}>
                         {(data) => {
-                            return <tr onClick={() => {
+                            return <tr class={`m_${data.timeslot % 3600}`} onClick={() => {
                                     setTimeslot(data.timeslot);
                                     timeSlotController.showModal();
                                 }}>
-                                <th>{`${Math.floor(data.timeslot / 60)}`.padStart(2, "0")}:{`${data.timeslot % 60}`.padStart(2, "0")}</th>
+                                <th>{`${Math.floor(data.timeslot / 3600)}`.padStart(2, "0")}:{`${(data.timeslot / 60) % 60}`.padStart(2, "0")}</th>
                                 <For each={actions}>
                                     {(action) => <td>
                                         {data.type?.actions[action] ?? ""}

@@ -31,7 +31,7 @@ export const UpdateScheduleDialog: Component<DialogProps & {
                     if (key === "time_zone" && typeof value === "string") {
                         // This is a time.
                         return Number.parseInt((formData.get("time_zone_sign") ?? "") + value.split(":")
-                            .map((i, index) => Number.parseInt(i) * Math.max(1, (1 - index) * 60))
+                            .map((i, index) => Number.parseInt(i) * Math.pow(60, 2 - index))
                             .reduce((prev, next) => prev + next, 0)
                             .toString());
                     }

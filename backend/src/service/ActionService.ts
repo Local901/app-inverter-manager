@@ -63,11 +63,11 @@ export class ActionService {
             try {
                 console.log(`[${new Date().toISOString()}] Perform actions on '${inverter.name}'`);
                 await inverter.connect(async (inv) => {
-                    if ((await inv.getStatus()) !== Status.OK) {
-                        // TODO: Add error message to the inverter to allow the user to know why no action was done.
-                        console.log(`Abort actions on ${inverter.name}. Status was not OK.`);
-                        return;
-                    }
+                    // if ((await inv.getStatus()) !== Status.OK) {
+                    //     // TODO: Add error message to the inverter to allow the user to know why no action was done.
+                    //     console.log(`Abort actions on ${inverter.name}. Status was not OK.`);
+                    //     return;
+                    // }
 
                     const schedules = await this.manager.find(Schedule, {
                         where: {
@@ -86,8 +86,9 @@ export class ActionService {
                     });
 
                     const actions = await this.calculateActions(schedules);
+                    console.log(actions);
                     this.inverterChecks[inv.id] = Date.now() + (actions.nextAction * 1000);
-                    await this.performActions(inv, actions);
+                    // await this.performActions(inv, actions);
                 });
             } catch (error) {
                 console.error(error);
