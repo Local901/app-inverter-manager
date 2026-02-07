@@ -41,8 +41,8 @@ export const UpdateScheduleDialog: Component<DialogProps & {
                     return value;
                 })}
             >
-                <Stack direction={Direction.Vertical}>
-                    <Stack direction={Direction.Horizontal}>
+                <Stack direction={Direction.Vertical} gap="0.5em">
+                    <Stack direction={Direction.Horizontal} gap="0.5em">
                         <label class="ui-input-label" for="time_zone" title="Time zone">Time zone</label>
                         <select id="time_zone_sign" name="time_zone_sign">
                             <option value="" selected>+</option>
