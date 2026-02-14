@@ -62,6 +62,19 @@ export const ManageTimeslotDialog: Component<DialogProps & {
                     <button onClick={() => void updateAction("charge")}>Update</button>
                     <button onClick={() => void deleteAction("charge")}>Remove</button>
                 </Stack>
+                <Stack direction={Direction.Horizontal}>
+                    <Input
+                        type="number"
+                        id="min-soc"
+                        label="Minimum state of charge"
+                        required
+                        minLength={0}
+                        maxLength={100}
+                        step={1}
+                    />
+                    <button onClick={() => void updateAction("min-soc")}>Update</button>
+                    <button onClick={() => void deleteAction("min-soc")}>Remove</button>
+                </Stack>
             </Stack>
         </fieldset>
     </Dialog>

@@ -47,6 +47,13 @@ export abstract class InverterChild<OPTIONS extends GeneralSettings = GeneralSet
 
     public abstract getStatus(): Promise<Status>;
 
+    /**
+     * Get the current state of charge.
+     *
+     * @returns A number between 0 and 100.
+     */
+    public abstract getStateOfCharge(): Promise<number>;
+
     public abstract getMaxChargeRate(): Promise<number>;
     public abstract getMaxDischargeRate(): Promise<number>;
 

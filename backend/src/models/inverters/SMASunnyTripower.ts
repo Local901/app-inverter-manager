@@ -1,9 +1,16 @@
 import { InverterChild, type PartialInverterResponse } from "../Inverter.js";
 import { ModbusBuilder, type ModbusClient, type ModbusTcpOptions } from "../../clients/ModbusClient.js";
-import type { FormConfig } from "../../types/FormConfig.js";
 import { Status } from "../../types/Status.js";
 import { ChildEntity } from "typeorm";
 import type { SettingProperty } from "../../utilities/Settings.js";
+
+/*
+power control state: 40151
+power set point: 40149
+
+current battery state of charge: 30845
+current stored charge: 30847
+*/
 
 enum ControlMode {
     ACTIVE = 802,
@@ -42,8 +49,19 @@ export class SMASunnyTripower extends InverterChild<SMASunnyTripowerSettings> {
         return 5000;
     }
 
+    public async getStateOfCharge(): Promise<number> {
+        if (!this.client) {
+            throw new Error(`Missing connection to ${this.type}::${this.id}`);
+        }
+
+        const result = await this.client.readInputRegisters(30845, 4);
+        return result.buffer.readUInt32BE();
+    }
+
     public async chargeBattery(wattHour: number): Promise<void> {
-        if (!this.client) return; // throw new Error(`Missing connection to ${this.type}::${this.id}`);
+        if (!this.client) {
+            throw new Error(`Missing connection to ${this.type}::${this.id}`);
+        }
 
         const powerSetPoint = Buffer.allocUnsafe(4);
         powerSetPoint.writeInt32BE(-wattHour); // Has to be negative to charge.

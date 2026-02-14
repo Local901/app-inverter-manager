@@ -17,7 +17,7 @@ const updateScheduleValidator = v.object({
 });
 
 const timeSlotBodyValidator = v.object({
-    action: v.string(),
+    action: v.string<"charge" | "min-soc">({ enum: ["charge", "min-soc"] }),
     value: v.string({ regex: /^\d+$/ }),
 });
 
