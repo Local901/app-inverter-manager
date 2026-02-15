@@ -10,9 +10,8 @@ import { UpdateScheduleDialog } from "../components/dialog/UpdateScheduleDialog.
 import { useModalController } from "../hooks/UseModalControls.js";
 import { ManageTimeslotDialog } from "../components/dialog/ManageTimeslotDialog.jsx";
 import type { TimeslotType } from "../models/TimeSlot.js";
-import { Input } from "../elements/input/index.jsx";
 
-const actions = ["charge"];
+const actions = ["charge", "min-soc"];
 
 export const SchedulePage: Component = () => {
     const params = useParams<{ id: string }>();
