@@ -17,22 +17,13 @@ function getDbType(input: string): DatabaseType {
 }
 
 const debug = Env.boolean("DEBUG", false);
-const dbType = getDbType(Env.string("STORE_TYPE", "memory"));
+const dbType = getDbType(Env.string("STORE_TYPE", "mysql"));
 
 export const config = {
     debug: Env.boolean("DEBUG", false),
 
     port: Env.number("PORT", 8080),
     publicFilesPath: Env.string("PUBLIC_PATH", "./public"),
-
-    store: {
-        type: Env.string("STORE_TYPE", "memory"),
-        host: Env.string("STORE_HOST", ""),
-        port: Env.string("STORE_PORT", ""),
-        database: Env.string("STORE_DATABASE", ""),
-        user: Env.string("STORE_USER", ""),
-        password: Env.string("STORE_PASS", ""),
-    },
 
     db: {
         type: dbType,

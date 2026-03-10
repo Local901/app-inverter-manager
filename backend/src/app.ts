@@ -22,7 +22,22 @@ export class App {
 
         if (config.features.server) {
             console.log("Http server enabled ✅");
-            this.httpServer = new HttpServer(config.port, container);
+            this.httpServer = new HttpServer(
+                config.port,
+                container,
+                (inverterId) => {
+                    if (!this.actionService) {
+                        return;
+                    }
+                    void this.actionService.handleInverterUpdate(inverterId);
+                },
+                (scheduleId, timeslot) => {
+                    if (!this.actionService) {
+                        return;
+                    }
+                    void this.actionService.handleScheduleUpdate(scheduleId, timeslot);
+                }
+            );
         } else {
             console.log("Http server disabled ❌");
         }

@@ -50,32 +50,30 @@ export const ManageTimeslotDialog: Component<DialogProps & {
     return <Dialog controller={props.controller} onClose={props.onClose} open={props.open}>
         <fieldset>
             <legend>Manage timeslot</legend>
-            
-            <Stack direction={Direction.Vertical}>
-                <Stack direction={Direction.Horizontal}>
-                    <Input
-                        type="number"
-                        id="charge"
-                        label="Charge"
-                        required
-                    />
-                    <button onClick={() => void updateAction("charge")}>Update</button>
-                    <button onClick={() => void deleteAction("charge")}>Remove</button>
-                </Stack>
-                <Stack direction={Direction.Horizontal}>
-                    <Input
-                        type="number"
-                        id="min-soc"
-                        label="Minimum state of charge"
-                        required
-                        minLength={0}
-                        maxLength={100}
-                        step={1}
-                    />
-                    <button onClick={() => void updateAction("min-soc")}>Update</button>
-                    <button onClick={() => void deleteAction("min-soc")}>Remove</button>
-                </Stack>
-            </Stack>
+
+            <div style={{ display: "grid", "grid-template-columns": "auto auto auto auto", gap: "0.5em" }}>
+                <label class="ui-input-label" for="charge" title="charge">charge</label>
+                <Input
+                    type="text"
+                    id="charge"
+                    pattern="-?\d+"
+                    required
+                />
+                <button onClick={() => void updateAction("charge")}>Update</button>
+                <button onClick={() => void deleteAction("charge")}>Remove</button>
+
+                <label class="ui-input-label" for="min-soc" title="Minimum state of charge">Minimum state of charge</label>
+                <Input
+                    type="number"
+                    id="min-soc"
+                    required
+                    minLength={0}
+                    maxLength={100}
+                    step={1}
+                />
+                <button onClick={() => void updateAction("min-soc")}>Update</button>
+                <button onClick={() => void deleteAction("min-soc")}>Remove</button>
+            </div>
         </fieldset>
     </Dialog>
 }

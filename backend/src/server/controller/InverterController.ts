@@ -22,7 +22,10 @@ const createInverterBodyValidator = v.object({
 const inverterScheduleUpdateValidator = v.array(v.string({ regex: /\d+/ }));
 
 export class InverterController implements Controller {
-    public constructor(private readonly manager: EntityManager) {
+    public constructor(
+        private readonly manager: EntityManager,
+        private readonly onInverterUpdate: (inverterId: number) => void,
+    ) {
 
     }
 
@@ -164,6 +167,7 @@ export class InverterController implements Controller {
                 }));
                 await m.save(newRelations);
             });
+            this.onInverterUpdate(id);
         });
     }
 

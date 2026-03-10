@@ -18,7 +18,7 @@ const updateScheduleValidator = v.object({
 
 const timeSlotBodyValidator = v.object({
     action: v.string<"charge" | "min-soc">({ enum: ["charge", "min-soc"] }),
-    value: v.string({ regex: /^\d+$/ }),
+    value: v.string({ regex: /^-?\d+$/ }),
 });
 
 const deleteTimeSlotBodyValidator = v.object({
@@ -26,7 +26,10 @@ const deleteTimeSlotBodyValidator = v.object({
 });
 
 export class ScheduleController implements Controller {
-    public constructor(private readonly manager: EntityManager) {}
+    public constructor(
+        private readonly manager: EntityManager,
+        private readonly onScheduleUpdate: (scheduleId: number, timeslot: number) => void,
+    ) {}
 
     public getSchedules(): RequestHandler {
         return JsonEndpoint(async () => {
@@ -152,11 +155,12 @@ export class ScheduleController implements Controller {
                     action,
                     value,
                 }));
-                return;
+            } else {
+                await this.manager.update(ScheduleItem, { id: item.id }, {
+                    value,
+                });
             }
-            await this.manager.update(ScheduleItem, { id: item.id }, {
-                value,
-            });
+            this.onScheduleUpdate(id, timeSlot);
         });
     }
 

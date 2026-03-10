@@ -53,6 +53,30 @@ export class ActionService {
         this.timeoutRef = undefined;
     }
 
+    public async handleInverterUpdate(inverterId: number): Promise<void> {
+        this.inverterChecks[inverterId] = 0;
+        this.stop();
+        await this.loop();
+    }
+
+    public async handleScheduleUpdate(scheduleId: number, timeSlot: number): Promise<void> {
+        const schedule = await this.manager.findOne(Schedule, { where: { id: scheduleId}, relations: { inverterRelations: true } });
+        if (!schedule) {
+            return;
+        }
+
+        const range = schedule.getItemRange();
+        if (!this.valueBetween(timeSlot, ...range)) {
+            return;
+        }
+
+        for (const rel of schedule.inverterRelations ?? []) {
+            this.inverterChecks[rel.inverterId] = 0;
+        }
+        this.stop();
+        await this.loop();
+    }
+
     private async process(): Promise<void> {
         const inactiveInverters = Object.entries(this.inverterChecks)
             .filter(([,timestamp]) => timestamp > Date.now())
@@ -84,6 +108,12 @@ export class ActionService {
                             items: true,
                         },
                     });
+
+                    if (schedules.length <= 0) {
+                        console.log(`No schedules configured on ${inverter.name}. Skip applying actions.`);
+                        this.inverterChecks[inv.id] = Date.now() + (15 * 60 * 1000);
+                        return;
+                    }
 
                     const actions = await this.calculateActions(schedules);
                     this.inverterChecks[inv.id] = Date.now() + (actions.nextAction * 1000);

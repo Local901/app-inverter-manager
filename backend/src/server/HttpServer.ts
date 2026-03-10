@@ -15,11 +15,13 @@ export class HttpServer {
     public constructor(
         private readonly port: number,
         container: Container,
+        onInverterUpdate: (inverterId: number) => void,
+        onScheduleUpdate: (scheduleId: number, timeslot: number) => void,
     ) {
         this.app = express();
         this.controllers = [
-            new InverterController(container.dataStore.manager),
-            new ScheduleController(container.dataStore.manager),
+            new InverterController(container.dataStore.manager, onInverterUpdate),
+            new ScheduleController(container.dataStore.manager, onScheduleUpdate),
         ];
 
         this.route(this.app);
